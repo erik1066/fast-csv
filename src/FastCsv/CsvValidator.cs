@@ -87,6 +87,7 @@ public class CsvValidator
         List<ValidationMessage> validationMessages = new();
         
         bool inQuotedField = false;
+        bool isEscapedQuote = false;
         int fieldCount = 1;
 
         for (int i = 0; i < row.Length; i++)
@@ -96,17 +97,53 @@ public class CsvValidator
             ReadOnlySpan<char> previousCharacter = i == 0 ? null : row.Slice(start: i - 1, length: 1);
             ReadOnlySpan<char> nextCharacter = i == row.Length - 1 ? null : row.Slice(start: i + 1, length: 1);
 
-            if (currentCharacter[0] == _quote && inQuotedField == false && (previousCharacter == null || previousCharacter[0] == options.Separator))
+            if (inQuotedField == false && currentCharacter[0] == _quote && (previousCharacter == null || previousCharacter[0] == options.Separator))
             {
                 // Happy path. We've come upon a quote that is preceded by a seperator or null (new row) - we're now going to be processing all remaining characters as if they're in a quoted field
                 inQuotedField = true;
             }
-            else if (currentCharacter[0] == _quote && inQuotedField == true && (nextCharacter == null || nextCharacter[0] == options.Separator))
+            else if (inQuotedField == true && currentCharacter[0] == _quote && (nextCharacter == null || nextCharacter[0] == options.Separator))
             {
                 // Happy path. We've come upon a quote that ends with either a new line, or a separator, so we stop processing all remaining characters as if they're in a quoted field
                 inQuotedField = false;
             }
-            else if (currentCharacter[0] == _quote && inQuotedField == false &&
+            else if (inQuotedField == true 
+                     && isEscapedQuote == false
+                     && currentCharacter[0] == _quote 
+                     && (nextCharacter != null && nextCharacter[0] != options.Separator))
+            {
+                // We're in a quoted field, and we came across a quote.
+                isEscapedQuote = true;
+            }
+            else if (inQuotedField == true 
+                     && isEscapedQuote == true
+                     && currentCharacter[0] == _quote 
+                     && (previousCharacter != null && previousCharacter[0] == _quote))
+            {
+                // We're in a quoted field, and we came across a second quote in a row.
+                isEscapedQuote = false;
+            }
+            else if (inQuotedField == true 
+                     && isEscapedQuote == true
+                     && currentCharacter[0] != _quote)
+            {
+                // TODO: Throw an ERROR - RFC-4180
+                var errorMessage = new ValidationMessage()
+                {
+                    Code = 2,
+                    Severity = Severity.Error,
+                    Content = $"Unescaped quote detected in a quoted field",
+                    MessageType = ValidationMessageType.Structural,
+                    Row = dataRowCount,
+                    FieldNumber = fieldCount,
+                    FieldName = string.Empty,
+                    Character = i
+                };
+                validationMessages.Add(errorMessage);
+                
+                isEscapedQuote = false;
+            }
+            else if (inQuotedField == false && currentCharacter[0] == _quote &&
                      (previousCharacter != null && previousCharacter[0] != options.Separator))
             {
                 /* Unhappy path. We've come upon a quote that occurred outside a quoted string, but where the
