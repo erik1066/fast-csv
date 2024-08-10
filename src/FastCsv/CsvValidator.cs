@@ -39,13 +39,14 @@ public class CsvValidator
                     // TODO: Check column names against schema
                 }
                 
+                
+                
+                var processRowResult = ProcessRow(row, rowCount, options, onHeaderRow);
+                validationMessages.AddRange(processRowResult.Messages);
+                containsLineBreakInQuotedField = processRowResult.ContainsLineBreakInQuotedField;
                 onHeaderRow = false;
 
                 int rowFieldCount = -1;
-                
-                var processRowResult = ProcessRow(row, rowCount, options);
-                validationMessages.AddRange(processRowResult.Messages);
-                containsLineBreakInQuotedField = processRowResult.ContainsLineBreakInQuotedField;
                 
                 if (initialFieldCount == -1)
                 {
@@ -100,13 +101,16 @@ public class CsvValidator
         return result;
     }
 
-    private ProcessRowResult ProcessRow(ReadOnlySpan<char> row, int dataRowCount, ValidationOptions options)
+    private ProcessRowResult ProcessRow(ReadOnlySpan<char> row, int dataRowCount, ValidationOptions options, bool isHeaderRow = false)
     {
         List<ValidationMessage> validationMessages = new();
+
+        Dictionary<string, int>? fieldNames = isHeaderRow ? new Dictionary<string, int>() : null;
 
         bool inQuotedField = false;
         bool isEscapedQuote = false;
         int fieldCount = 1;
+        int previousCommaPosition = 0;
 
         bool lineBreakInQuotedField = false;
 
@@ -196,6 +200,16 @@ public class CsvValidator
                 if (currentCharacter[0] == options.Separator)
                 {
                     fieldCount++;
+                    if (isHeaderRow)
+                    {
+                        // TODO: Add column name to header dictionary
+                        // TODO: Fix the fact that the last header field doesn't get added
+                        
+                        int charsToTake = i - previousCommaPosition;
+                        
+                        fieldNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString(), fieldCount);
+                        previousCommaPosition = i + 1;
+                    }
                 }
             }
         }
