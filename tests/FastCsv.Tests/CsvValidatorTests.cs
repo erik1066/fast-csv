@@ -105,6 +105,27 @@ public class CsvValidatorTests
         Assert.Equal(isValid, result.IsValid);
     }
     
+    [Theory]
+    [InlineData(true, "NAME,AGE,DOB\r\n\"John\r\nDoe\",23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "NAME,AGE,DOB\n\"John\r\nDoe\",23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
+    public void TestLineBreaksInQuotedFields(bool isValid, string csvContent, int actualDataRows, int actualFieldCount)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(actualDataRows, result.DataRowCount);
+        Assert.Equal(actualFieldCount, result.FieldCount);
+        Assert.Equal(isValid, result.IsValid);
+    }
+    
     private static Stream GenerateStreamFromString(string s)
     {
         var stream = new MemoryStream();

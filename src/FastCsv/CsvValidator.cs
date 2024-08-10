@@ -14,6 +14,8 @@ public class CsvValidator
         bool onHeaderRow = options.HasHeaderRow;
         int rowCount = 0;
         int initialFieldCount = -1;
+        bool containsLineBreakInQuotedField = false;
+        string previousLine = string.Empty;
 
         List<ValidationMessage> validationMessages = new List<ValidationMessage>();
 
@@ -23,6 +25,13 @@ public class CsvValidator
             {
                 string? line = streamReader.ReadLine();
                 if (line == null) break; // no content found, just end
+
+                if (containsLineBreakInQuotedField && !string.IsNullOrEmpty(previousLine))
+                {
+                    // we have content from a previous line to concatenate...
+                    line = previousLine + "\r\n" + line;
+                }
+                
                 ReadOnlySpan<char> row = line.AsSpan();
                 
                 if (onHeaderRow)
@@ -30,21 +39,30 @@ public class CsvValidator
                     // TODO: Check column names against schema
                 }
                 
-                rowCount++;
                 onHeaderRow = false;
 
                 int rowFieldCount = -1;
                 
+                var processRowResult = ProcessRow(row, rowCount, options);
+                validationMessages.AddRange(processRowResult.Messages);
+                containsLineBreakInQuotedField = processRowResult.ContainsLineBreakInQuotedField;
+                
                 if (initialFieldCount == -1)
                 {
-                    (initialFieldCount, var fieldCountMessages) = GetFieldCount(row, rowCount, options);
-                    validationMessages.AddRange(fieldCountMessages);
+                    initialFieldCount = processRowResult.FieldCount;
                 }
                 else
                 {
-                    (rowFieldCount, var fieldCountMessages) = GetFieldCount(row, rowCount, options);
-                    validationMessages.AddRange(fieldCountMessages);
+                    rowFieldCount = processRowResult.FieldCount;
                 }
+
+                if (containsLineBreakInQuotedField)
+                {
+                    previousLine = line;
+                    continue;
+                }
+                
+                rowCount++;
 
                 if (initialFieldCount != -1 && rowFieldCount != -1 && rowFieldCount != initialFieldCount)
                 {
@@ -82,13 +100,15 @@ public class CsvValidator
         return result;
     }
 
-    private (int, List<ValidationMessage>) GetFieldCount(ReadOnlySpan<char> row, int dataRowCount, ValidationOptions options)
+    private ProcessRowResult ProcessRow(ReadOnlySpan<char> row, int dataRowCount, ValidationOptions options)
     {
         List<ValidationMessage> validationMessages = new();
-        
+
         bool inQuotedField = false;
         bool isEscapedQuote = false;
         int fieldCount = 1;
+
+        bool lineBreakInQuotedField = false;
 
         for (int i = 0; i < row.Length; i++)
         {
@@ -107,23 +127,23 @@ public class CsvValidator
                 // Happy path. We've come upon a quote that ends with either a new line, or a separator, so we stop processing all remaining characters as if they're in a quoted field
                 inQuotedField = false;
             }
-            else if (inQuotedField == true 
+            else if (inQuotedField == true
                      && isEscapedQuote == false
-                     && currentCharacter[0] == _quote 
+                     && currentCharacter[0] == _quote
                      && (nextCharacter != null && nextCharacter[0] != options.Separator))
             {
                 // We're in a quoted field, and we came across a quote.
                 isEscapedQuote = true;
             }
-            else if (inQuotedField == true 
+            else if (inQuotedField == true
                      && isEscapedQuote == true
-                     && currentCharacter[0] == _quote 
+                     && currentCharacter[0] == _quote
                      && (previousCharacter != null && previousCharacter[0] == _quote))
             {
                 // We're in a quoted field, and we came across a second quote in a row.
                 isEscapedQuote = false;
             }
-            else if (inQuotedField == true 
+            else if (inQuotedField == true
                      && isEscapedQuote == true
                      && currentCharacter[0] != _quote)
             {
@@ -140,15 +160,15 @@ public class CsvValidator
                     Character = i
                 };
                 validationMessages.Add(errorMessage);
-                
+
                 isEscapedQuote = false;
             }
             else if (inQuotedField == false && currentCharacter[0] == _quote &&
                      (previousCharacter != null && previousCharacter[0] != options.Separator))
             {
                 /* Unhappy path. We've come upon a quote that occurred outside a quoted string, but where the
-                 prior character is neither null nor a separator. This indicates an invalid use of quotes. 
-                 Example: NA"ME,AGE,DOB  
+                 prior character is neither null nor a separator. This indicates an invalid use of quotes.
+                 Example: NA"ME,AGE,DOB
                  */
                 
                 // TODO: Throw an ERROR - RFC-4180
@@ -165,6 +185,11 @@ public class CsvValidator
                 };
                 validationMessages.Add(errorMessage);
             }
+            else if (inQuotedField == true && isEscapedQuote == false && nextCharacter == null)
+            {
+                // we're in a quoted field and came across a line break - we need to do a continuation
+                lineBreakInQuotedField = true;
+            }
 
             if (!inQuotedField)
             {
@@ -175,6 +200,18 @@ public class CsvValidator
             }
         }
 
-        return (fieldCount, validationMessages);
+        var result = new ProcessRowResult()
+        {
+            FieldCount = fieldCount,
+            ContainsLineBreakInQuotedField = lineBreakInQuotedField,
+            Line = lineBreakInQuotedField ? row.ToString() : string.Empty
+        };
+
+        foreach (var message in validationMessages)
+        {
+            result.AddMessage(message);
+        }
+
+        return result;
     }
 }
