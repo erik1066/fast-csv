@@ -6,6 +6,7 @@ namespace FastCsv;
 public class CsvValidator
 {
     private readonly char _quote = '\"';
+    
     public ValidationResult Validate(Stream content, ValidationOptions options) 
     {
         var sw = new System.Diagnostics.Stopwatch();
@@ -19,6 +20,10 @@ public class CsvValidator
 
         List<ValidationMessage> validationMessages = new List<ValidationMessage>();
         List<string> headers = new List<string>();
+        ProcessRowOptions rowOptions = new ProcessRowOptions()
+        {
+            IsHeaderRow = onHeaderRow
+        };
 
         using (StreamReader streamReader = new StreamReader(content))
         {
@@ -34,19 +39,26 @@ public class CsvValidator
                 }
                 
                 ReadOnlySpan<char> row = line.AsSpan();
+                rowOptions.IsHeaderRow = onHeaderRow;
+                rowOptions.DataRowCount = rowCount;
                 
                 if (onHeaderRow)
                 {
                     // TODO: Check column names against schema
                 }
                 
-                ProcessRowResult processRowResult = ProcessRow(row, rowCount, options, onHeaderRow);
+                ProcessRowResult processRowResult = ProcessRow(row, rowOptions, options);
                 validationMessages.AddRange(processRowResult.Messages);
                 containsLineBreakInQuotedField = processRowResult.ContainsLineBreakInQuotedField;
 
                 if (onHeaderRow)
                 {
                     headers.AddRange(processRowResult.HeaderRowNames);
+                    for (int i = 0; i < processRowResult.HeaderRowNames.Count; i++)
+                    {
+                        string header = processRowResult.HeaderRowNames[i];
+                        rowOptions.AddHeader(header, i);
+                    }
                 }
                 
                 onHeaderRow = false;
@@ -144,11 +156,11 @@ public class CsvValidator
         return result;
     }
 
-    private ProcessRowResult ProcessRow(ReadOnlySpan<char> row, int dataRowCount, ValidationOptions options, bool isHeaderRow)
+    private ProcessRowResult ProcessRow(ReadOnlySpan<char> row, ProcessRowOptions options, ValidationOptions validationOptions)
     {
         List<ValidationMessage> validationMessages = new();
 
-        List<string>? headerRowNames = isHeaderRow ? new List<string>() : null;
+        List<string>? headerRowNames = options.IsHeaderRow ? new List<string>() : null;
 
         bool inQuotedField = false;
         bool isEscapedQuote = false;
@@ -157,7 +169,7 @@ public class CsvValidator
 
         bool lineBreakInQuotedField = false;
 
-        if (isHeaderRow && row.Length == 0)
+        if (options.IsHeaderRow && row.Length == 0)
         {
             // special case - header row with zero length, so assume there is just one field name and make it an empty string
             headerRowNames?.Add(string.Empty);
@@ -170,12 +182,12 @@ public class CsvValidator
             ReadOnlySpan<char> previousCharacter = i == 0 ? null : row.Slice(start: i - 1, length: 1);
             ReadOnlySpan<char> nextCharacter = i == row.Length - 1 ? null : row.Slice(start: i + 1, length: 1);
 
-            if (inQuotedField == false && currentCharacter[0] == _quote && (previousCharacter == null || previousCharacter[0] == options.Separator))
+            if (inQuotedField == false && currentCharacter[0] == _quote && (previousCharacter == null || previousCharacter[0] == validationOptions.Separator))
             {
                 // Happy path. We've come upon a quote that is preceded by a seperator or null (new row) - we're now going to be processing all remaining characters as if they're in a quoted field
                 inQuotedField = true;
             }
-            else if (inQuotedField == true && currentCharacter[0] == _quote && (nextCharacter == null || nextCharacter[0] == options.Separator))
+            else if (inQuotedField == true && currentCharacter[0] == _quote && (nextCharacter == null || nextCharacter[0] == validationOptions.Separator))
             {
                 // Happy path. We've come upon a quote that ends with either a new line, or a separator, so we stop processing all remaining characters as if they're in a quoted field
                 inQuotedField = false;
@@ -183,7 +195,7 @@ public class CsvValidator
             else if (inQuotedField == true
                      && isEscapedQuote == false
                      && currentCharacter[0] == _quote
-                     && (nextCharacter != null && nextCharacter[0] != options.Separator))
+                     && (nextCharacter != null && nextCharacter[0] != validationOptions.Separator))
             {
                 // We're in a quoted field, and we came across a quote.
                 isEscapedQuote = true;
@@ -207,7 +219,7 @@ public class CsvValidator
                     Severity = Severity.Error,
                     Content = $"Unescaped quote detected in a quoted field",
                     MessageType = ValidationMessageType.Structural,
-                    Row = dataRowCount,
+                    Row = options.DataRowCount,
                     FieldNumber = fieldCount,
                     FieldName = string.Empty,
                     Character = i
@@ -217,7 +229,7 @@ public class CsvValidator
                 isEscapedQuote = false;
             }
             else if (inQuotedField == false && currentCharacter[0] == _quote &&
-                     (previousCharacter != null && previousCharacter[0] != options.Separator))
+                     (previousCharacter != null && previousCharacter[0] != validationOptions.Separator))
             {
                 /* Unhappy path. We've come upon a quote that occurred outside a quoted string, but where the
                  prior character is neither null nor a separator. This indicates an invalid use of quotes.
@@ -229,7 +241,7 @@ public class CsvValidator
                     Severity = Severity.Error,
                     Content = $"Quote detected outside of a quoted string",
                     MessageType = ValidationMessageType.Structural,
-                    Row = dataRowCount,
+                    Row = options.DataRowCount,
                     FieldNumber = fieldCount,
                     FieldName = string.Empty,
                     Character = i
@@ -244,10 +256,10 @@ public class CsvValidator
 
             if (!inQuotedField)
             {
-                if (currentCharacter[0] == options.Separator)
+                if (currentCharacter[0] == validationOptions.Separator)
                 {
                     fieldCount++;
-                    if (isHeaderRow)
+                    if (options.IsHeaderRow)
                     {
                         int charsToTake = i - previousCommaPosition;
                         headerRowNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString());
@@ -256,7 +268,7 @@ public class CsvValidator
                 }
                 
                 // the following code ensures that we get the final column name
-                if (isHeaderRow && i == row.Length - 1)
+                if (options.IsHeaderRow && i == row.Length - 1)
                 {
                     int charsToTake = i - previousCommaPosition + 1;
                     headerRowNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString());
@@ -276,7 +288,7 @@ public class CsvValidator
             result.AddMessage(message);
         }
 
-        if (isHeaderRow && headerRowNames != null)
+        if (options.IsHeaderRow && headerRowNames != null)
         {
             foreach (string headerRowName in headerRowNames)
             {
