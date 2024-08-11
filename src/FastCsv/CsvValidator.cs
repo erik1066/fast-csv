@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Text;
-
-namespace FastCsv;
+﻿namespace FastCsv;
 
 public class CsvValidator
 {
@@ -184,7 +181,7 @@ public class CsvValidator
 
             if (inQuotedField == false && currentCharacter[0] == _quote && (previousCharacter == null || previousCharacter[0] == validationOptions.Separator))
             {
-                // Happy path. We've come upon a quote that is preceded by a seperator or null (new row) - we're now going to be processing all remaining characters as if they're in a quoted field
+                // Happy path. We've come upon a quote that is preceded by a separator or null (new row) - we're now going to be processing all remaining characters as if they're in a quoted field
                 inQuotedField = true;
             }
             else if (inQuotedField == true && currentCharacter[0] == _quote && (nextCharacter == null || nextCharacter[0] == validationOptions.Separator))
