@@ -174,8 +174,6 @@ public class CsvValidator
                  prior character is neither null nor a separator. This indicates an invalid use of quotes.
                  Example: NA"ME,AGE,DOB
                  */
-                
-                // TODO: Throw an ERROR - RFC-4180
                 var errorMessage = new ValidationMessage()
                 {
                     Code = 2,
@@ -202,14 +200,17 @@ public class CsvValidator
                     fieldCount++;
                     if (isHeaderRow)
                     {
-                        // TODO: Add column name to header dictionary
-                        // TODO: Fix the fact that the last header field doesn't get added
-                        
                         int charsToTake = i - previousCommaPosition;
-                        
                         fieldNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString(), fieldCount);
                         previousCommaPosition = i + 1;
                     }
+                }
+                
+                // the following code ensures that we get the final column name
+                if (isHeaderRow && i == row.Length - 1)
+                {
+                    int charsToTake = i - previousCommaPosition + 1;
+                    fieldNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString(), fieldCount);
                 }
             }
         }
