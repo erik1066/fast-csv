@@ -12,6 +12,12 @@ public class ProcessRowResult
 
     public ReadOnlyCollection<ValidationMessage> Messages => _readOnlyMessages;
     
+    private readonly List<string> _headerRowNames = new();
+
+    private readonly ReadOnlyCollection<string> _readOnlyHeaderRowNames;
+
+    public ReadOnlyCollection<string> HeaderRowNames => _readOnlyHeaderRowNames;
+    
     public string Line { get; init; } = string.Empty;
 
     public bool ContainsLineBreakInQuotedField { get; init; } = false;
@@ -19,11 +25,17 @@ public class ProcessRowResult
     public ProcessRowResult()
     {
         _readOnlyMessages = new ReadOnlyCollection<ValidationMessage>(_messages);
+        _readOnlyHeaderRowNames = new ReadOnlyCollection<string>(_headerRowNames);
     }
 
     public void AddMessage(ValidationMessage message)
     {
         _messages.Add(message);
+    }
+    
+    public void AddHeaderRowName(string headerRowName)
+    {
+        _headerRowNames.Add(headerRowName);
     }
         
 }

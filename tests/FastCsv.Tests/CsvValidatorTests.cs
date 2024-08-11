@@ -126,6 +126,31 @@ public class CsvValidatorTests
         Assert.Equal(isValid, result.IsValid);
     }
     
+    [Theory]
+    [InlineData(true, "NAME,AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "NAME,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "NAME,AGE,DOB\rJohn,23,1/1/2000\rMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "NAME,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000\r\n", 2, 3)]
+    [InlineData(true, "\"First,Last Names\",AGE,DOB\r\nJohn Doe,23,1/1/2000\r\nMary Sue,34,1/1/2000", 2, 3)]
+    [InlineData(false, "NAME,AGE,DOB\n\rJohn,23,1/1/2000\n\rMary,34,1/1/2000", 4, 3)]
+    public void TestHeaderNameDetection(bool isValid, string csvContent, int actualDataRows, int actualFieldCount)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(actualDataRows, result.DataRowCount);
+        Assert.Equal(actualFieldCount, result.FieldCount);
+        Assert.Equal(isValid, result.IsValid);
+    }
+    
     private static Stream GenerateStreamFromString(string s)
     {
         var stream = new MemoryStream();

@@ -18,6 +18,7 @@ public class CsvValidator
         string previousLine = string.Empty;
 
         List<ValidationMessage> validationMessages = new List<ValidationMessage>();
+        List<string> headers = new List<string>();
 
         using (StreamReader streamReader = new StreamReader(content))
         {
@@ -39,11 +40,15 @@ public class CsvValidator
                     // TODO: Check column names against schema
                 }
                 
-                
-                
-                var processRowResult = ProcessRow(row, rowCount, options, onHeaderRow);
+                ProcessRowResult processRowResult = ProcessRow(row, rowCount, options, onHeaderRow);
                 validationMessages.AddRange(processRowResult.Messages);
                 containsLineBreakInQuotedField = processRowResult.ContainsLineBreakInQuotedField;
+
+                if (onHeaderRow)
+                {
+                    headers.AddRange(processRowResult.HeaderRowNames);
+                }
+                
                 onHeaderRow = false;
 
                 int rowFieldCount = -1;
@@ -98,14 +103,19 @@ public class CsvValidator
             result.AddMessage(message);
         }
 
+        foreach (var header in headers)
+        {
+            result.AddHeader(header);
+        }
+
         return result;
     }
 
-    private ProcessRowResult ProcessRow(ReadOnlySpan<char> row, int dataRowCount, ValidationOptions options, bool isHeaderRow = false)
+    private ProcessRowResult ProcessRow(ReadOnlySpan<char> row, int dataRowCount, ValidationOptions options, bool isHeaderRow)
     {
         List<ValidationMessage> validationMessages = new();
 
-        Dictionary<string, int>? fieldNames = isHeaderRow ? new Dictionary<string, int>() : null;
+        List<string>? headerRowNames = isHeaderRow ? new List<string>() : null;
 
         bool inQuotedField = false;
         bool isEscapedQuote = false;
@@ -201,7 +211,7 @@ public class CsvValidator
                     if (isHeaderRow)
                     {
                         int charsToTake = i - previousCommaPosition;
-                        fieldNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString(), fieldCount);
+                        headerRowNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString());
                         previousCommaPosition = i + 1;
                     }
                 }
@@ -210,7 +220,7 @@ public class CsvValidator
                 if (isHeaderRow && i == row.Length - 1)
                 {
                     int charsToTake = i - previousCommaPosition + 1;
-                    fieldNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString(), fieldCount);
+                    headerRowNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString());
                 }
             }
         }
@@ -225,6 +235,14 @@ public class CsvValidator
         foreach (var message in validationMessages)
         {
             result.AddMessage(message);
+        }
+
+        if (isHeaderRow && headerRowNames != null)
+        {
+            foreach (string headerRowName in headerRowNames)
+            {
+                result.AddHeaderRowName(headerRowName);
+            }
         }
 
         return result;
