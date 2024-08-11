@@ -98,14 +98,47 @@ public class CsvValidator
             FieldCount = initialFieldCount
         };
 
+        for (int i = 0; i < headers.Count; i++)
+        {
+            string header = headers[i];
+            if (string.IsNullOrEmpty(header))
+            {
+                // WARNING - RFC 4180 - empty field name
+                var warningMessage = new ValidationMessage()
+                {
+                    Code = 4,
+                    Severity = Severity.Warning,
+                    Content = $"A field name with a length of 0 characters was detected",
+                    MessageType = ValidationMessageType.Structural,
+                    Row = 1,
+                    FieldNumber = i + 1,
+                    FieldName = string.Empty,
+                    Character = -1
+                };
+                validationMessages.Add(warningMessage);
+            }
+            else if (string.IsNullOrWhiteSpace(header))
+            {
+                // INFO - RFC 4180 - field name with just whitespace
+                var infoMessage = new ValidationMessage()
+                {
+                    Code = 5,
+                    Severity = Severity.Information,
+                    Content = $"A field name with only whitespace characters was detected",
+                    MessageType = ValidationMessageType.Structural,
+                    Row = 1,
+                    FieldNumber = i + 1,
+                    FieldName = string.Empty,
+                    Character = -1
+                };
+                validationMessages.Add(infoMessage);
+            }
+            result.AddHeader(header);
+        }
+        
         foreach (var message in validationMessages)
         {
             result.AddMessage(message);
-        }
-
-        foreach (var header in headers)
-        {
-            result.AddHeader(header);
         }
 
         return result;
@@ -123,6 +156,12 @@ public class CsvValidator
         int previousCommaPosition = 0;
 
         bool lineBreakInQuotedField = false;
+
+        if (isHeaderRow && row.Length == 0)
+        {
+            // special case - header row with zero length, so assume there is just one field name and make it an empty string
+            headerRowNames?.Add(string.Empty);
+        }
 
         for (int i = 0; i < row.Length; i++)
         {

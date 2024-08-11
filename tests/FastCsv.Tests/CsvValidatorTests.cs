@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using FastCsv;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 
 namespace FastCsv.Tests;
 
@@ -127,13 +128,31 @@ public class CsvValidatorTests
     }
     
     [Theory]
-    [InlineData(true, "NAME,AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 2, 3)]
-    [InlineData(true, "NAME,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
-    [InlineData(true, "NAME,AGE,DOB\rJohn,23,1/1/2000\rMary,34,1/1/2000", 2, 3)]
-    [InlineData(true, "NAME,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000\r\n", 2, 3)]
-    [InlineData(true, "\"First,Last Names\",AGE,DOB\r\nJohn Doe,23,1/1/2000\r\nMary Sue,34,1/1/2000", 2, 3)]
-    [InlineData(false, "NAME,AGE,DOB\n\rJohn,23,1/1/2000\n\rMary,34,1/1/2000", 4, 3)]
-    public void TestHeaderNameDetection(bool isValid, string csvContent, int actualDataRows, int actualFieldCount)
+    [InlineData(true, "NAME,AGE,DOB", 3, 0, "NAME", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "NAME,AGE,DOB\n", 3, 0, "NAME", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "NAME,AGE,DOB\r\n", 3, 0, "NAME", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "NAME,AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "NAME", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "NAME,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 3, 0, "NAME", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "\"NAME\",AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "\"NAME\"", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "\"NAME\",AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 3, 0, "\"NAME\"", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "\"FIRST NAME\",AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "\"FIRST NAME\"", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "\"FIRST NAME\",AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 3, 0, "\"FIRST NAME\"", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "\"LAST,FIRST NAME\",AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "\"LAST,FIRST NAME\"", 1, "AGE", 2, "DOB")]
+    [InlineData(true, "\"LAST, FIRST NAME\",AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "\"LAST, FIRST NAME\"", 1, "AGE", 2, "DOB")]
+    [InlineData(true, ",AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "", 1, "AGE", 2, "DOB")]
+    [InlineData(true, ",,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "", 1, "", 2, "DOB")]
+    [InlineData(true, ",,\nJohn,23,1/1/2000\nMary,34,1/1/2000", 3, 0, "", 1, "", 2, "")]
+    [InlineData(true, ",,\nJohn,23,1/1/2000", 3, 0, "", 1, "", 2, "")]
+    [InlineData(true, ",,\r\nJohn,23,1/1/2000", 3, 0, "", 1, "", 2, "")]
+    [InlineData(true, ",,\r\n", 3, 0, "", 1, "", 2, "")]
+    [InlineData(true, ",,\n", 3, 0, "", 1, "", 2, "")]
+    [InlineData(true, ",,", 3, 0, "", 1, "", 2, "")]
+    [InlineData(true, ",", 2, 0, "", 1, "", 2, "")]
+    [InlineData(true, "\r\nMARY\r\nSUSAN", 1, 0, "", 1, "", 2, "")]
+    [InlineData(true, " \r\nMARY\r\nSUSAN", 1, 0, " ", 1, "", 2, "")]
+    [InlineData(true, "  \r\nMARY\r\nSUSAN", 1, 0, "  ", 1, "", 2, "")]
+    [InlineData(true, " -- \r\nMARY\r\nSUSAN", 1, 0, " -- ", 1, "", 2, "")]
+    public void TestHeaderNameDetection(bool isValid, string csvContent, int totalHeaderCount, int header1Position, string header1, int header2Position, string header2, int header3Position, string header3)
     {
         CsvValidator validator = new CsvValidator();
         var options = new ValidationOptions()
@@ -146,9 +165,83 @@ public class CsvValidatorTests
         ValidationResult result = validator.Validate(content: content, options: options);
         
         Assert.True(result.ElapsedMilliseconds >= 0.0);
-        Assert.Equal(actualDataRows, result.DataRowCount);
-        Assert.Equal(actualFieldCount, result.FieldCount);
+        if (totalHeaderCount - 1 >= header1Position)
+        {
+            Assert.Equal(header1, result.Headers[header1Position]);
+        }
+
+        if (totalHeaderCount - 1 >= header2Position)
+        {
+            Assert.Equal(header2, result.Headers[header2Position]);
+        }
+
+        if (totalHeaderCount - 1 >= header3Position)
+        {
+            Assert.Equal(header3, result.Headers[header3Position]);
+        }
+
+        Assert.Equal(totalHeaderCount, result.Headers.Count);
         Assert.Equal(isValid, result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData(1, "\r\nMARY\r\nSUSAN")]
+    [InlineData(2, "NAME,,DOB\r\nMARY,23,1/1/2000")]
+    [InlineData(3, "NAME,AGE,\r\nMARY,23,1/1/2000")]
+    public void TestHeaderNameDetectionWithWarnings(int problemFieldNumber, string csvContent)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(1, result.WarningCount);
+        Assert.Single(result.Messages);
+        Assert.Equal(ValidationMessageType.Structural, result.Messages[0].MessageType);
+        Assert.Equal(1, result.Messages[0].Row);
+        Assert.Equal(problemFieldNumber, result.Messages[0].FieldNumber);
+        Assert.Equal(4, result.Messages[0].Code);
+        Assert.True(result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData(1, " \r\nMARY")]
+    [InlineData(1, "  \r\nMARY")]
+    [InlineData(1, "   \r\nMARY")]
+    [InlineData(2, "NAME, ,DOB\r\nMARY,23,1/1/2000")]
+    [InlineData(2, "NAME,  ,DOB\r\nMARY,23,1/1/2000")]
+    [InlineData(3, "NAME,AGE, \r\nMARY,23,1/1/2000")]
+    [InlineData(3, "NAME,AGE,  \r\nMARY,23,1/1/2000")]
+    public void TestHeaderNameDetectionWithInformation(int problemFieldNumber, string csvContent)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(0, result.WarningCount);
+        Assert.Single(result.Messages);
+        Assert.Equal(ValidationMessageType.Structural, result.Messages[0].MessageType);
+        Assert.Equal(Severity.Information, result.Messages[0].Severity);
+        Assert.Equal(1, result.Messages[0].Row);
+        Assert.Equal(problemFieldNumber, result.Messages[0].FieldNumber);
+        Assert.Equal(5, result.Messages[0].Code);
+        Assert.True(result.IsValid);
+        Assert.Equal(1, result.DataRowCount);
     }
     
     private static Stream GenerateStreamFromString(string s)
