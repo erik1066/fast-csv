@@ -1,0 +1,77 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/erik1066/fast-csv/validator-config-schema.json",
+    "title": "Validation Schema for CSV Files",
+    "description": "This is a schema for representing a JSON congifuration file for validation of CSV files.",
+    "type": "object",
+    "properties": {
+        "name": {
+            "description": "The name of this file",
+            "type": "string"
+        },
+        "description": {
+            "description": "The description of the file's contents",
+            "type": "string"
+        },
+        "has_header": {
+            "description": "Whether this file has a header row",
+            "type": "boolean"
+        },
+        "columns": {
+            "description": "The column definitions for this CSV file",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": ["string", "null"]
+                    },
+                    "ordinal": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "values": {
+                        "type": ["array", "null"],
+                        "uniqueItems": true,
+                        "maxnItems": 100,
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "values_url": {
+                        "type": ["string", "null"]
+                    },
+                    "max": {
+                        "type": ["integer", "null"]
+                    },
+                    "min": {
+                        "type": ["integer", "null"]
+                    },
+                    "required": {
+                        "type": "boolean"
+                    },
+                    "null_or_empty": {
+                        "type": "boolean"
+                    },
+                    "format": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "regex": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
