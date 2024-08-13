@@ -17,6 +17,10 @@
             "description": "Whether this file has a header row",
             "type": "boolean"
         },
+        "separator": {
+            "description": "The separator character to use. For example, a comma or a semicolon. If left null or given a value of length greater than 1, this will tell the validator to try and infer the separator character. Inferring the separator is impossible to do with 100% accuracy without a significant performance penalty, so specifying the separator is highly recommended.",
+            "type": "string"
+        },
         "columns": {
             "description": "The column definitions for this CSV file",
             "type": "array",
