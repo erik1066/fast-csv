@@ -63,7 +63,7 @@ static Stream GenerateStreamFromString(string s)
 
 The [examples](/examples/) folder contains example code that demonstrates how to use FastCsv.
 
-### Simplest Example - .NET Console App
+### Simplest Example: .NET Console App
 
 Let's look at the `FastCsv.ConsoleDemo` project. 
 
@@ -90,3 +90,5 @@ Valid File = True
 ```
 
 That's all there is to it.
+
+> This console app includes a hard-coded CSV file in `program.cs` to make it as simple as possible to run the example. A CSV input file is therefore not required.
