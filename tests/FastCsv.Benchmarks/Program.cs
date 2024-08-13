@@ -6,7 +6,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var summary1 = BenchmarkRunner.Run<ValidatorBenchmarks>();
+        var summary = BenchmarkRunner.Run<ValidatorBenchmarks>();
     }
 }
 
