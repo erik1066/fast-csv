@@ -209,7 +209,7 @@ public sealed class ValidationProfileTests
     
     [Theory]
     [InlineData(true, "FIRST NAME,STATUS,AGE,TEMP,ACTIVE\nJohn,Confirmed,23,99.8,true", 1, 5)]
-    public void TestSchemaBasedValidationSimple(bool isValid, string csvContent, int expectedDataRows, int expectedFieldCount)
+    public void TestSchemaValidationSimple(bool isValid, string csvContent, int expectedDataRows, int expectedFieldCount)
     {
         CsvValidator validator = new CsvValidator();
         var options = new ValidationOptions()
@@ -231,7 +231,7 @@ public sealed class ValidationProfileTests
     
     [Theory]
     [InlineData("STR COL 1,STR COL 2,STR COL 3\nfirst field val,second field value,third field value", 1, 3)]
-    public void TestSchemaBasedValidationForStringFields_Success(
+    public void TestSchemaValidationForStringFields_Success(
         string csvContent, 
         int expectedDataRows, 
         int expectedFieldCount)
@@ -255,8 +255,12 @@ public sealed class ValidationProfileTests
     }
     
     [Theory]
+    [InlineData(1, 3, 1, 1, 10, "STR COL 1,STR COL 2,STR COL 3\nfirst field valu,second field value,third field value")]
     [InlineData(1, 3, 1, 1, 10, "STR COL 1,STR COL 2,STR COL 3\nfirst field value,second field value,third field value")]
-    public void TestSchemaBasedValidationForStringFields_Fail(
+    [InlineData(1, 3, 1, 1, 10, "STR COL 1,STR COL 2,STR COL 3\n1234567890123456,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 10, "STR COL 1,STR COL 2,STR COL 3\n                ,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 10, "STR COL 1,STR COL 2,STR COL 3\n12345678901234567890,second field value,third field value")]
+    public void TestSchemaValidationForStringFields_Fail_MaxLength_Single(
         int expectedDataRows, 
         int expectedFieldCount,
         int expectedRowErrorPosition,
@@ -264,6 +268,12 @@ public sealed class ValidationProfileTests
         int expectedErrorCode,
         string csvContent)
     {
+        /*
+         * Tests the CSV schema-based validation
+         * For CSV column type = string
+         * To ensure values exceeding the max length property are properly error'd
+         * When there is just one max length violation in the CSV file
+         */
         CsvValidator validator = new CsvValidator();
         var options = new ValidationOptions()
         {
@@ -282,6 +292,142 @@ public sealed class ValidationProfileTests
         Assert.Equal(expectedRowErrorPosition, result.Messages[0].Row);
         Assert.Equal(expectedFieldErrorPosition, result.Messages[0].FieldNumber);
         Assert.Equal(expectedErrorCode, result.Messages[0].Code);
+        Assert.False(result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData(10, "STR COL 1,STR COL 2,STR COL 3\nfirst field valu,second field value,third field value\nfirst field valu,second field value,third field value")]
+    [InlineData(10, "STR COL 1,STR COL 2,STR COL 3\nfirst field value,second field value,third field value\nfirst field value,second field value,third field value")]
+    [InlineData(10, "STR COL 1,STR COL 2,STR COL 3\n1234567890123456,second field value,third field value\n1234567890123456,second field value,third field value")]
+    [InlineData(10, "STR COL 1,STR COL 2,STR COL 3\n                ,second field value,third field value\n                ,second field value,third field value")]
+    [InlineData(10, "STR COL 1,STR COL 2,STR COL 3\n12345678901234567890,second field value,third field value\n12345678901234567890,second field value,third field value")]
+    public void TestSchemaValidationForStringFields_Fail_MaxLength_Multiple(
+        int expectedErrorCode,
+        string csvContent)
+    {
+        /*
+         * Tests the CSV schema-based validation
+         * For CSV column type = string
+         * To ensure values exceeding the max length property are properly error'd
+         * When there are more than one max length violations in the CSV file
+         */
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson02
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        foreach (var message in result.Messages)
+        {
+            Assert.Equal(expectedErrorCode, message.Code);
+        }
+
+        Assert.False(result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\nfirst fie,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\nfirst fi,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n123456789,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n         ,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n12345678,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n1234567,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n123456,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n12345,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n1234,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n123,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n12,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n1,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\n,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\nfirst fie,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\nfirst fi,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n123456789,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n         ,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n12345678,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n1234567,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n123456,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n12345,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n1234,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n123,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n12,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n1,second field value,third field value")]
+    [InlineData(1, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n,second field value,third field value")]
+    [InlineData(2, 3, 2, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n1234567890,second field value,third field value\r\n123456789,second field value,third field value")]
+    [InlineData(3, 3, 3, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n1234567890,second field value,third field value\r\n1234567890,second field value,third field value\r\n123456789,second field value,third field value")]
+    [InlineData(3, 3, 1, 1, 11, "STR COL 1,STR COL 2,STR COL 3\r\n,second field value,third field value\r\n1234567890,second field value,third field value\r\n1234567890,second field value,third field value")]
+    public void TestSchemaValidationForStringFields_Fail_MinLength_Single(
+        int expectedDataRows, 
+        int expectedFieldCount,
+        int expectedRowErrorPosition,
+        int expectedFieldErrorPosition,
+        int expectedErrorCode,
+        string csvContent)
+    {
+        /*
+         * Tests the CSV schema-based validation
+         * For CSV column type = string
+         * To ensure values below the min length property are properly error'd
+         * When there is just one min length violation in the CSV file
+         */
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson02
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(expectedDataRows, result.DataRowCount);
+        Assert.Equal(expectedFieldCount, result.FieldCount);
+        Assert.Equal(expectedRowErrorPosition, result.Messages[0].Row);
+        Assert.Equal(expectedFieldErrorPosition, result.Messages[0].FieldNumber);
+        Assert.Equal(expectedErrorCode, result.Messages[0].Code);
+        Assert.False(result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData(11, "STR COL 1,STR COL 2,STR COL 3\nfirst fie,second field value,third field value\nfirst fie,second field value,third field value")]
+    [InlineData(11, "STR COL 1,STR COL 2,STR COL 3\n,second field value,third field value\n,second field value,third field value")]
+    public void TestSchemaValidationForStringFields_Fail_MinLength_Multiple(
+        int expectedErrorCode,
+        string csvContent)
+    {
+        /*
+         * Tests the CSV schema-based validation
+         * For CSV column type = string
+         * To ensure values below the min length property are properly error'd
+         * When there are more than one min length violations in the CSV file
+         */
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson02
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        foreach (var message in result.Messages)
+        {
+            Assert.Equal(expectedErrorCode, message.Code);
+        }
+
         Assert.False(result.IsValid);
     }
     
