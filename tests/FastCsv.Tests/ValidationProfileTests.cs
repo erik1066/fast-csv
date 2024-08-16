@@ -4,10 +4,7 @@ namespace FastCsv.Tests;
 
 public sealed class ValidationProfileTests
 {
-    [Fact]
-    public void TestProfileCreation01()
-    {
-        string profileJson = @"{
+    private static string ProfileJson01 = @"{
     ""$schema"": ""fast-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
@@ -82,8 +79,58 @@ public sealed class ValidationProfileTests
         }
     ]
 }";
-
-        ValidationProfile? profile = JsonSerializer.Deserialize<ValidationProfile>(profileJson);
+    
+    private static string ProfileJson02 = @"{
+    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""name"": ""Case Records"",
+    ""description"": ""Case Records for Bureaucratitis 2020"",
+    ""filename"": ""abc123.csv"",
+    ""separator"": "","",
+    ""has_header"": true,
+    ""columns"": [
+        {
+            ""name"": ""STR COL 1"",
+            ""description"": """",
+            ""ordinal"": 1,
+            ""type"": ""string"",
+            ""max"": 15,
+            ""min"": 10,
+            ""required"": false,
+            ""null_or_empty"": true,
+            ""format"": null,
+            ""regex"": null
+        },
+        {
+            ""name"": ""STR COL 2"",
+            ""description"": """",
+            ""ordinal"": 2,
+            ""type"": ""string"",
+            ""max"": 255,
+            ""min"": 0,
+            ""required"": true,
+            ""null_or_empty"": false,
+            ""format"": null,
+            ""regex"": null
+        },
+        {
+            ""name"": ""STR COL 3"",
+            ""description"": """",
+            ""ordinal"": 3,
+            ""type"": ""string"",
+            ""max"": 255,
+            ""min"": 1,
+            ""required"": false,
+            ""null_or_empty"": false,
+            ""format"": null,
+            ""regex"": null
+        }
+    ]
+}";
+    
+    [Fact]
+    public void TestProfileCreation01()
+    {
+        ValidationProfile? profile = JsonSerializer.Deserialize<ValidationProfile>(ProfileJson01);
         List<ValidationColumnProfile>? columnProfiles = profile?.Columns;
         
         Assert.NotNull(profile);
@@ -158,5 +205,93 @@ public sealed class ValidationProfileTests
         Assert.True(columnProfiles[4].CanBeNullOrEmpty);
         Assert.Null(columnProfiles[4].Format);
         Assert.Null(columnProfiles[4].Regex);
+    }
+    
+    [Theory]
+    [InlineData(true, "FIRST NAME,STATUS,AGE,TEMP,ACTIVE\nJohn,Confirmed,23,99.8,true", 1, 5)]
+    public void TestSchemaBasedValidationSimple(bool isValid, string csvContent, int expectedDataRows, int expectedFieldCount)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson01
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(expectedDataRows, result.DataRowCount);
+        Assert.Equal(expectedFieldCount, result.FieldCount);
+        Assert.Equal(isValid, result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData("STR COL 1,STR COL 2,STR COL 3\nfirst field val,second field value,third field value", 1, 3)]
+    public void TestSchemaBasedValidationForStringFields_Success(
+        string csvContent, 
+        int expectedDataRows, 
+        int expectedFieldCount)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson02
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(expectedDataRows, result.DataRowCount);
+        Assert.Equal(expectedFieldCount, result.FieldCount);
+        Assert.True(result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData(1, 3, 1, 1, 10, "STR COL 1,STR COL 2,STR COL 3\nfirst field value,second field value,third field value")]
+    public void TestSchemaBasedValidationForStringFields_Fail(
+        int expectedDataRows, 
+        int expectedFieldCount,
+        int expectedRowErrorPosition,
+        int expectedFieldErrorPosition,
+        int expectedErrorCode,
+        string csvContent)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson02
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(expectedDataRows, result.DataRowCount);
+        Assert.Equal(expectedFieldCount, result.FieldCount);
+        Assert.Equal(expectedRowErrorPosition, result.Messages[0].Row);
+        Assert.Equal(expectedFieldErrorPosition, result.Messages[0].FieldNumber);
+        Assert.Equal(expectedErrorCode, result.Messages[0].Code);
+        Assert.False(result.IsValid);
+    }
+    
+    private static Stream GenerateStreamFromString(string s)
+    {
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+        writer.Write(s);
+        writer.Flush();
+        stream.Position = 0;
+        return stream;
     }
 }

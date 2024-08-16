@@ -47,6 +47,9 @@
                             "type": "string"
                         }
                     },
+                    "are_values_case_sensitive": {
+                        "type": "boolean"
+                    },
                     "values_url": {
                         "type": ["string", "null"]
                     },

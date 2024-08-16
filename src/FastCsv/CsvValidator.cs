@@ -2,7 +2,8 @@
 
 public class CsvValidator
 {
-    private readonly char _quote = '\"';
+    private char _quote = '\"';
+    private IFieldValidator? _fieldValidator;
     
     public ValidationResult Validate(Stream content, ValidationOptions options) 
     {
@@ -14,6 +15,7 @@ public class CsvValidator
         int initialFieldCount = -1;
         bool containsLineBreakInQuotedField = false;
         string previousLine = string.Empty;
+        _quote = options.Quote;
 
         List<ValidationMessage> validationMessages = new List<ValidationMessage>();
         List<string> headers = new List<string>();
@@ -21,6 +23,11 @@ public class CsvValidator
         {
             IsHeaderRow = onHeaderRow
         };
+
+        if (!string.IsNullOrWhiteSpace(options.ValidationProfile))
+        {
+            _fieldValidator = new CsvFieldValidator(options.ValidationProfile, rowOptions);
+        }
 
         using (StreamReader streamReader = new StreamReader(content))
         {
@@ -255,13 +262,28 @@ public class CsvValidator
             {
                 if (currentCharacter[0] == validationOptions.Separator)
                 {
-                    fieldCount++;
                     if (options.IsHeaderRow)
                     {
+                        // Deal with this being a column name in a header row
                         int charsToTake = i - previousCommaPosition;
                         headerRowNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString());
                         previousCommaPosition = i + 1;
                     }
+                    else
+                    {
+                        // Deal with this being a field value in a data row
+                        int charsToTake = i - previousCommaPosition;
+                        ReadOnlySpan<char> field = row.Slice(start: previousCommaPosition, length: charsToTake);
+                        previousCommaPosition = i + 1;
+                        
+                        var messages = _fieldValidator?.ValidateField(
+                            field: field, 
+                            rowNumber: options.DataRowCount, 
+                            fieldPosition: fieldCount);
+
+                        if (messages != null) validationMessages.AddRange(messages);
+                    }
+                    fieldCount++;
                 }
                 
                 // the following code ensures that we get the final column name
@@ -269,6 +291,20 @@ public class CsvValidator
                 {
                     int charsToTake = i - previousCommaPosition + 1;
                     headerRowNames?.Add(row.Slice(start: previousCommaPosition, length: charsToTake).ToString());
+                }
+                else if (i == row.Length - 1)
+                {
+                    // get the last field
+                    int charsToTake = i - previousCommaPosition >= 0 ? i - previousCommaPosition : 0;
+                    ReadOnlySpan<char> field = row.Slice(start: previousCommaPosition, length: charsToTake);
+                    previousCommaPosition = i + 1;
+                    
+                    var messages = _fieldValidator?.ValidateField(
+                        field: field, 
+                        rowNumber: options.DataRowCount, 
+                        fieldPosition: fieldCount);
+
+                    if (messages != null) validationMessages.AddRange(messages);
                 }
             }
         }

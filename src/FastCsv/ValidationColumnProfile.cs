@@ -29,8 +29,12 @@ public class ValidationColumnProfile
     [JsonPropertyOrder(4)]
     public List<string> Values { get; set; } = new List<string>(0);
 
-    [JsonPropertyName("min")]
+    [JsonPropertyName("are_values_case_sensitive")]
     [JsonPropertyOrder(5)]
+    public bool AreValuesCaseSensitive { get; set; } = true;
+
+    [JsonPropertyName("min")]
+    [JsonPropertyOrder(6)]
     public long? Min
     {
         get => _min;
@@ -48,7 +52,7 @@ public class ValidationColumnProfile
     }
 
     [JsonPropertyName("max")]
-    [JsonPropertyOrder(6)]
+    [JsonPropertyOrder(7)]
     public long? Max
     {
         get => _max;
@@ -66,18 +70,18 @@ public class ValidationColumnProfile
     }
     
     [JsonPropertyName("required")]
-    [JsonPropertyOrder(7)]
+    [JsonPropertyOrder(8)]
     public bool Required { get; set; } = false;
     
     [JsonPropertyName("null_or_empty")]
-    [JsonPropertyOrder(8)]
+    [JsonPropertyOrder(9)]
     public bool CanBeNullOrEmpty { get; set; } = true;
     
     [JsonPropertyName("format")]
-    [JsonPropertyOrder(9)]
+    [JsonPropertyOrder(10)]
     public string Format { get; set; } = string.Empty;
     
     [JsonPropertyName("regex")]
-    [JsonPropertyOrder(10)]
+    [JsonPropertyOrder(11)]
     public string Regex { get; set; } = string.Empty;
 }
