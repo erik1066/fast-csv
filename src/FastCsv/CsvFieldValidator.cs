@@ -27,8 +27,11 @@ public class CsvFieldValidator : IFieldValidator
         // Do data type validation
         switch (columnProfile.Type)
         {                        
-            case "string":
             case "enum":
+                messages.AddRange(ValidateEnumField(field, rowNumber, fieldPosition, columnProfile));
+                messages.AddRange(ValidateStringField(field, rowNumber, fieldPosition, columnProfile));
+                break;
+            case "string":
                 messages.AddRange(ValidateStringField(field, rowNumber, fieldPosition, columnProfile));
                 break;
             
@@ -36,8 +39,8 @@ public class CsvFieldValidator : IFieldValidator
 
         return messages;
     }
-
-    private List<ValidationMessage> ValidateStringField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition, ValidationColumnProfile columnProfile)
+    
+    private List<ValidationMessage> ValidateEnumField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition, ValidationColumnProfile columnProfile)
     {
         List<ValidationMessage> messages = new List<ValidationMessage>();
 
@@ -82,6 +85,13 @@ public class CsvFieldValidator : IFieldValidator
         }
         
         // TODO: Check values URL
+        
+        return messages;
+    }
+
+    private List<ValidationMessage> ValidateStringField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition, ValidationColumnProfile columnProfile)
+    {
+        List<ValidationMessage> messages = new List<ValidationMessage>();
         
         // Check Max
         if (field.Length > columnProfile.Max)
