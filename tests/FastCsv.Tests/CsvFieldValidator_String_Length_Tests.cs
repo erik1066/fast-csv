@@ -27,41 +27,6 @@ public class CsvFieldValidator_String_Length_Tests
     ]
 }";
     
-    private static readonly string ProfileJson02 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
-    ""name"": ""Case Records"",
-    ""description"": ""Case Records for Bureaucratitis 2020"",
-    ""filename"": ""abc123.csv"",
-    ""separator"": "","",
-    ""has_header"": true,
-    ""columns"": [
-        {
-            ""name"": ""STR COL 1"",
-            ""description"": ""String type, tests for MIN/MAX length"",
-            ""ordinal"": 1,
-            ""type"": ""string"",
-            ""max"": 10,
-            ""min"": 5,
-            ""required"": false,
-            ""null_or_empty"": true,
-            ""format"": null,
-            ""regex"": null
-        },
-        {
-            ""name"": ""STR COL 2"",
-            ""description"": ""String type, tests for MIN/MAX length"",
-            ""ordinal"": 2,
-            ""type"": ""string"",
-            ""max"": 10,
-            ""min"": 5,
-            ""required"": false,
-            ""null_or_empty"": true,
-            ""format"": null,
-            ""regex"": null
-        }
-    ]
-}";
-    
     [Theory]
     [InlineData(1, 1, "STR COL 1", "12345")]
     [InlineData(1, 1, "STR COL 1", "123456")]
