@@ -296,6 +296,13 @@ public class CsvValidator
                 {
                     // get the last field
                     int charsToTake = i - previousCommaPosition >= 0 ? i - previousCommaPosition : 0;
+
+                    if (previousCommaPosition == 0)
+                    {
+                        // special case for a CSV file with 1 column only; there won't be any previous commas
+                        charsToTake = charsToTake + 1;
+                    }
+                    
                     ReadOnlySpan<char> field = row.Slice(start: previousCommaPosition, length: charsToTake);
                     previousCommaPosition = i + 1;
                     

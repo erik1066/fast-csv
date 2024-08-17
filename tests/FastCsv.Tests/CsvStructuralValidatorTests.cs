@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 
 namespace FastCsv.Tests;
 
-public class CsvValidatorTests
+public class CsvStructuralValidatorTests
 {
     [Theory]
     [InlineData(true, "NAME,AGE,DOB\nJohn,23,1/1/2000\nMary,34,1/1/2000", 2, 3)]
