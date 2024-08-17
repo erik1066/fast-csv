@@ -9,11 +9,11 @@ public class CsvFieldValidator : IFieldValidator
     private readonly ProcessRowOptions _rowOptions;
     private readonly List<ValidationColumnProfile> _columnProfiles;
     
-    public CsvFieldValidator(string csvValidationProfile, ProcessRowOptions rowOptions)
+    public CsvFieldValidator(ValidationProfile profile, ProcessRowOptions rowOptions)
     {
-        _profile = JsonSerializer.Deserialize<ValidationProfile>(csvValidationProfile);
+        _profile = profile;
         _rowOptions = rowOptions;
-        _columnProfiles = _profile?.Columns;
+        _columnProfiles = _profile?.Columns ?? [];
     }
 
     public List<ValidationMessage> ValidateField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition)
@@ -181,15 +181,16 @@ public class CsvFieldValidator : IFieldValidator
         {
             string format = columnProfile.Format;
             
-            if (format.StartsWith("mm/dd/yyyy", StringComparison.Ordinal) || 
-                format.StartsWith("m/d/yyyy", StringComparison.Ordinal) ||
-                format.StartsWith("M/d/yyyy", StringComparison.Ordinal) || 
-                format.StartsWith("M/d/yy", StringComparison.Ordinal) || 
-                format.StartsWith("MM/dd/yy", StringComparison.Ordinal) ||
-                format.StartsWith("MM/dd/yyyy", StringComparison.Ordinal) ||
-                format.StartsWith("yy/MM/dd", StringComparison.Ordinal) ||
-                format.StartsWith("yyyy-MM-dd", StringComparison.Ordinal) ||
-                format.StartsWith("dd-MMM-yy", StringComparison.Ordinal)
+            if (format.StartsWith("mm", StringComparison.OrdinalIgnoreCase) || 
+                format.StartsWith("m/", StringComparison.OrdinalIgnoreCase) ||
+                format.StartsWith("m-", StringComparison.OrdinalIgnoreCase) ||
+                format.StartsWith("m.", StringComparison.OrdinalIgnoreCase) ||
+                format.StartsWith("dd", StringComparison.OrdinalIgnoreCase) || 
+                format.StartsWith("d/", StringComparison.OrdinalIgnoreCase) ||
+                format.StartsWith("d-", StringComparison.OrdinalIgnoreCase) ||
+                format.StartsWith("d.", StringComparison.OrdinalIgnoreCase) ||
+                format.StartsWith("d ", StringComparison.OrdinalIgnoreCase) ||
+                format.StartsWith("yyyy", StringComparison.OrdinalIgnoreCase) 
                 )
             {
                 string fieldValue = field.ToString();

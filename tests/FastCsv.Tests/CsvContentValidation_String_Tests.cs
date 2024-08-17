@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace FastCsv.Tests;
 
-public sealed class CsvContentValidationTests_String
+public sealed class CsvContentValidation_String_Tests
 {
     private static readonly string ProfileJson01 = @"{
     ""$schema"": ""fast-csv/validator-config-schema.json"",

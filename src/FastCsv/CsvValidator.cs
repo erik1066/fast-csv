@@ -1,4 +1,6 @@
-﻿namespace FastCsv;
+﻿using System.Text.Json;
+
+namespace FastCsv;
 
 public class CsvValidator
 {
@@ -26,7 +28,8 @@ public class CsvValidator
 
         if (!string.IsNullOrWhiteSpace(options.ValidationProfile))
         {
-            _fieldValidator = new CsvFieldValidator(options.ValidationProfile, rowOptions);
+            var csvValidationProfile = JsonSerializer.Deserialize<ValidationProfile>(options.ValidationProfile) ?? new ValidationProfile();
+            _fieldValidator = new CsvFieldValidator(csvValidationProfile, rowOptions);
         }
 
         using (StreamReader streamReader = new StreamReader(content))
