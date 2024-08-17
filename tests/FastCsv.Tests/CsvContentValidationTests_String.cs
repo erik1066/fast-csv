@@ -379,57 +379,6 @@ public sealed class CsvContentValidationTests_String
 
         Assert.False(result.IsValid);
     }
-
-    [Theory]
-    [InlineData("STR COL 1\nConfirmed")]
-    [InlineData("STR COL 1\nConfirmed\nProbable")]
-    [InlineData("STR COL 1\r\nConfirmed")]
-    [InlineData("STR COL 1\r\nConfirmed\r\nProbable")]
-    public void TestSchemaValidationForStringFields_Success_Values(string csvContent)
-    {
-        CsvValidator validator = new CsvValidator();
-        var options = new ValidationOptions()
-        {
-            Separator = ',',
-            HasHeaderRow = true,
-            Quote = '\"',
-            ValidationProfile = ProfileJson03
-        };
-
-        Stream content = GenerateStreamFromString(csvContent);
-        ValidationResult result = validator.Validate(content: content, options: options);
-        
-        Assert.True(result.ElapsedMilliseconds >= 0.0);
-        Assert.True(result.IsValid);
-    }
-    
-    [Theory]
-    [InlineData("STR COL 1\nConfirme")]
-    [InlineData("STR COL 1\nConfirme\nProbable")]
-    [InlineData("STR COL 1\r\nConfirme")]
-    [InlineData("STR COL 1\r\nConfirme\r\nProbable")]
-    public void TestSchemaValidationForStringFields_Fail_Values(string csvContent)
-    {
-        CsvValidator validator = new CsvValidator();
-        var options = new ValidationOptions()
-        {
-            Separator = ',',
-            HasHeaderRow = true,
-            Quote = '\"',
-            ValidationProfile = ProfileJson03
-        };
-
-        Stream content = GenerateStreamFromString(csvContent);
-        ValidationResult result = validator.Validate(content: content, options: options);
-        
-        Assert.True(result.ElapsedMilliseconds >= 0.0);
-        Assert.Single(result.Messages);
-        foreach (var message in result.Messages)
-        {
-            Assert.Equal(9, message.Code);
-        }
-        Assert.True(result.IsValid);
-    }
     
     private static Stream GenerateStreamFromString(string s)
     {

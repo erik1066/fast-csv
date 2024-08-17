@@ -28,8 +28,10 @@ public class CsvFieldValidator : IFieldValidator
         switch (columnProfile.Type)
         {                        
             case "string":
+            case "enum":
                 messages.AddRange(ValidateStringField(field, rowNumber, fieldPosition, columnProfile));
                 break;
+            
         }
 
         return messages;
@@ -38,9 +40,11 @@ public class CsvFieldValidator : IFieldValidator
     private List<ValidationMessage> ValidateStringField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition, ValidationColumnProfile columnProfile)
     {
         List<ValidationMessage> messages = new List<ValidationMessage>();
-        
+
         // Check values
-        if (columnProfile.Values.Count > 0)
+        if (field.Length == 0 && columnProfile.Required == false)
+        { }
+        else if (columnProfile.Values.Count > 0)
         {
             var comparisonType = StringComparison.OrdinalIgnoreCase;
             

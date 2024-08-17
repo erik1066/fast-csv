@@ -281,7 +281,7 @@ public class CsvValidator
                             rowNumber: options.DataRowCount, 
                             fieldPosition: fieldCount);
 
-                        if (messages != null) validationMessages.AddRange(messages);
+                        if (messages != null && messages.Count > 0) validationMessages.AddRange(messages);
                     }
                     fieldCount++;
                 }
@@ -295,13 +295,7 @@ public class CsvValidator
                 else if (i == row.Length - 1)
                 {
                     // get the last field
-                    int charsToTake = i - previousCommaPosition >= 0 ? i - previousCommaPosition : 0;
-
-                    if (previousCommaPosition == 0)
-                    {
-                        // special case for a CSV file with 1 column only; there won't be any previous commas
-                        charsToTake = charsToTake + 1;
-                    }
+                    int charsToTake = i - previousCommaPosition + 1;
                     
                     ReadOnlySpan<char> field = row.Slice(start: previousCommaPosition, length: charsToTake);
                     previousCommaPosition = i + 1;
@@ -311,9 +305,20 @@ public class CsvValidator
                         rowNumber: options.DataRowCount, 
                         fieldPosition: fieldCount);
 
-                    if (messages != null) validationMessages.AddRange(messages);
+                    if (messages != null && messages.Count > 0) validationMessages.AddRange(messages);
                 }
             }
+        }
+
+        if (row.Length == 0)
+        {
+            // special case, the CSV file has 1 column and this is a null or empty cell
+            var messages = _fieldValidator?.ValidateField(
+                field: row, 
+                rowNumber: options.DataRowCount, 
+                fieldPosition: fieldCount);
+
+            if (messages != null && messages.Count > 0) validationMessages.AddRange(messages);
         }
 
         var result = new ProcessRowResult()
