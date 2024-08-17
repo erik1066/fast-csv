@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace FastCsv;
 
@@ -6,7 +7,8 @@ public class ValidationColumnProfile
 {
     private Int64 _min = Int64.MinValue;
     private Int64 _max = Int64.MaxValue;
-    
+    private string _regex = string.Empty;
+    private Regex _regularExpression = new Regex("", RegexOptions.Compiled);
     
     [JsonRequired]
     [JsonPropertyName("name")]
@@ -80,8 +82,22 @@ public class ValidationColumnProfile
     [JsonPropertyName("format")]
     [JsonPropertyOrder(10)]
     public string Format { get; set; } = string.Empty;
-    
+
     [JsonPropertyName("regex")]
     [JsonPropertyOrder(11)]
-    public string Regex { get; set; } = string.Empty;
+    public string Regex
+    {
+        get => _regex;
+        set
+        {
+            if (value != null)
+            {
+                _regex = value;
+                _regularExpression = new Regex(_regex, RegexOptions.Compiled);
+            }
+        }
+    }
+    
+    [JsonIgnore]
+    public Regex RegularExpression => _regularExpression;
 }

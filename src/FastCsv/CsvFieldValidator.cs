@@ -176,7 +176,6 @@ public class CsvFieldValidator : IFieldValidator
             messages.Add(errorMessage);
         }
         
-        // TODO: Check format
         if (!string.IsNullOrEmpty(columnProfile.Format))
         {
             string format = columnProfile.Format;
@@ -279,6 +278,28 @@ public class CsvFieldValidator : IFieldValidator
         }
         
         // TODO: Check regular expression
+        if (!string.IsNullOrWhiteSpace(columnProfile.Regex))
+        {
+            string fieldValue = field.ToString();
+            
+            var match = columnProfile.RegularExpression.Match(fieldValue);
+
+            if (match.Success == false)
+            {
+                var errorMessage = new ValidationMessage()
+                {
+                    Code = 19,
+                    Severity = Severity.Error,
+                    Content = $"Field '{columnProfile.Name}' has data that does not match the required regular expression.",
+                    MessageType = ValidationMessageType.Content,
+                    Row = rowNumber,
+                    FieldNumber = fieldPosition,
+                    FieldName = columnProfile.Name,
+                    Character = -1
+                };
+                messages.Add(errorMessage);
+            }
+        }
         
         return messages;
     }

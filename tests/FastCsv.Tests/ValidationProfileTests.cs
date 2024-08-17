@@ -153,7 +153,7 @@ public sealed class ValidationProfileTests
         Assert.False(columnProfiles[0].Required);
         Assert.True(columnProfiles[0].CanBeNullOrEmpty);
         Assert.Null(columnProfiles[0].Format);
-        Assert.Null(columnProfiles[0].Regex);
+        Assert.Equal(string.Empty, columnProfiles[0].Regex);
         
         Assert.Equal("STATUS", columnProfiles[1].Name);
         Assert.Equal("Case status of the patient", columnProfiles[1].Description);
@@ -168,7 +168,7 @@ public sealed class ValidationProfileTests
         Assert.True(columnProfiles[1].Required);
         Assert.False(columnProfiles[1].CanBeNullOrEmpty);
         Assert.Null(columnProfiles[1].Format);
-        Assert.Null(columnProfiles[1].Regex);
+        Assert.Equal(string.Empty, columnProfiles[1].Regex);
         
         Assert.Equal("AGE", columnProfiles[2].Name);
         Assert.Equal("Age of the patient", columnProfiles[2].Description);
@@ -180,7 +180,7 @@ public sealed class ValidationProfileTests
         Assert.False(columnProfiles[2].Required);
         Assert.True(columnProfiles[2].CanBeNullOrEmpty);
         Assert.Null(columnProfiles[2].Format);
-        Assert.Null(columnProfiles[2].Regex);
+        Assert.Equal(string.Empty, columnProfiles[2].Regex);
         
         Assert.Equal("TEMP", columnProfiles[3].Name);
         Assert.Equal("Temperature of the patient", columnProfiles[3].Description);
@@ -192,7 +192,7 @@ public sealed class ValidationProfileTests
         Assert.False(columnProfiles[3].Required);
         Assert.True(columnProfiles[3].CanBeNullOrEmpty);
         Assert.Null(columnProfiles[3].Format);
-        Assert.Null(columnProfiles[3].Regex);
+        Assert.Equal(string.Empty, columnProfiles[3].Regex);
         
         Assert.Equal("ACTIVE", columnProfiles[4].Name);
         Assert.Equal("Is an active record", columnProfiles[4].Description);
@@ -204,6 +204,6 @@ public sealed class ValidationProfileTests
         Assert.False(columnProfiles[4].Required);
         Assert.True(columnProfiles[4].CanBeNullOrEmpty);
         Assert.Null(columnProfiles[4].Format);
-        Assert.Null(columnProfiles[4].Regex);
+        Assert.Equal(string.Empty, columnProfiles[4].Regex);
     }
 }
