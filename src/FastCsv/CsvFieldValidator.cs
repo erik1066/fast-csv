@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace FastCsv;
@@ -34,7 +35,6 @@ public class CsvFieldValidator : IFieldValidator
             case "string":
                 messages.AddRange(ValidateStringField(field, rowNumber, fieldPosition, columnProfile));
                 break;
-            
         }
 
         return messages;
@@ -177,6 +177,105 @@ public class CsvFieldValidator : IFieldValidator
         }
         
         // TODO: Check format
+        if (!string.IsNullOrEmpty(columnProfile.Format))
+        {
+            string format = columnProfile.Format;
+            
+            if (format.StartsWith("mm/dd/yyyy", StringComparison.Ordinal) || 
+                format.StartsWith("m/d/yyyy", StringComparison.Ordinal) ||
+                format.StartsWith("M/d/yyyy", StringComparison.Ordinal) || 
+                format.StartsWith("M/d/yy", StringComparison.Ordinal) || 
+                format.StartsWith("MM/dd/yy", StringComparison.Ordinal) ||
+                format.StartsWith("MM/dd/yyyy", StringComparison.Ordinal) ||
+                format.StartsWith("yy/MM/dd", StringComparison.Ordinal) ||
+                format.StartsWith("yyyy-MM-dd", StringComparison.Ordinal) ||
+                format.StartsWith("dd-MMM-yy", StringComparison.Ordinal)
+                )
+            {
+                string fieldValue = field.ToString();
+                
+                bool success = DateTime.TryParseExact(
+                    s: fieldValue, 
+                    format: format, 
+                    System.Globalization.CultureInfo.InvariantCulture, 
+                    style: DateTimeStyles.None,
+                    out DateTime dateTime);
+
+                if (!success)
+                {
+                    var errorMessage = new ValidationMessage()
+                    {
+                        Code = 16,
+                        Severity = Severity.Error,
+                        Content = $"Field '{columnProfile.Name}' requires data to be in '{format}' date format.",
+                        MessageType = ValidationMessageType.Content,
+                        Row = rowNumber,
+                        FieldNumber = fieldPosition,
+                        FieldName = columnProfile.Name,
+                        Character = -1
+                    };
+                    messages.Add(errorMessage);
+                }
+            }
+            // Step 2: Check if lengths are off. If they are then we don't need to check any further.
+            else if (field.Length != format.Length)
+            {
+                var errorMessage = new ValidationMessage()
+                {
+                    Code = 15,
+                    Severity = Severity.Error,
+                    Content = $"Field '{columnProfile.Name}' requires data to be in '{format}' format.",
+                    MessageType = ValidationMessageType.Content,
+                    Row = rowNumber,
+                    FieldNumber = fieldPosition,
+                    FieldName = columnProfile.Name,
+                    Character = -1
+                };
+                messages.Add(errorMessage);
+            }
+            else
+            {
+                for (int i = 0; i < format.Length; i++)
+                {
+                    char formatChar = format[i];
+                    char fieldChar = field[i];
+                    
+                    // We expected a number, but we got a non-number character
+                    if (formatChar == '#' && !char.IsDigit(fieldChar))
+                    {
+                        var errorMessage = new ValidationMessage()
+                        {
+                            Code = 17,
+                            Severity = Severity.Error,
+                            Content = $"Field '{columnProfile.Name}' requires data to be in '{format}' format. Character mismatch at position {i + 1}. Expected a digit but found a non-digit.",
+                            MessageType = ValidationMessageType.Content,
+                            Row = rowNumber,
+                            FieldNumber = fieldPosition,
+                            FieldName = columnProfile.Name,
+                            Character = -1
+                        };
+                        messages.Add(errorMessage);
+                        break;
+                    }
+                    else if (formatChar != '#' && formatChar != fieldChar)
+                    {
+                        var errorMessage = new ValidationMessage()
+                        {
+                            Code = 18,
+                            Severity = Severity.Error,
+                            Content = $"Field '{columnProfile.Name}' requires data to be in '{format}' format. Character mismatch at position {i + 1}.",
+                            MessageType = ValidationMessageType.Content,
+                            Row = rowNumber,
+                            FieldNumber = fieldPosition,
+                            FieldName = columnProfile.Name,
+                            Character = -1
+                        };
+                        messages.Add(errorMessage);
+                        break;
+                    }
+                }
+            }
+        }
         
         // TODO: Check regular expression
         

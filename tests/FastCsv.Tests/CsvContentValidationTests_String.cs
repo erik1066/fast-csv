@@ -150,6 +150,41 @@ public sealed class CsvContentValidationTests_String
         }
     ]
 }";
+    
+    private static readonly string ProfileJson06 = @"{
+    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""name"": ""Case Records"",
+    ""description"": ""Case Records for Bureaucratitis 2020"",
+    ""filename"": ""abc123.csv"",
+    ""separator"": "","",
+    ""has_header"": true,
+    ""columns"": [
+        {
+            ""name"": ""STR COL 1"",
+            ""description"": """",
+            ""ordinal"": 1,
+            ""type"": ""string"",
+            ""max"": 45,
+            ""min"": 0,
+            ""required"": false,
+            ""null_or_empty"": true,
+            ""format"": ""###-###-####"",
+            ""regex"": null
+        },
+{
+            ""name"": ""STR COL 2"",
+            ""description"": """",
+            ""ordinal"": 2,
+            ""type"": ""string"",
+            ""max"": 45,
+            ""min"": 0,
+            ""required"": false,
+            ""null_or_empty"": true,
+            ""format"": ""mm/dd/yyyy"",
+            ""regex"": null
+        }
+    ]
+}";
 
     [Theory]
     [InlineData(true, "FIRST NAME,STATUS,AGE,TEMP,ACTIVE\nJohn,Confirmed,23,99.8,true", 1, 5)]
@@ -377,6 +412,62 @@ public sealed class CsvContentValidationTests_String
             Assert.Equal(expectedErrorCode, message.Code);
         }
 
+        Assert.False(result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData("STR COL 1,STR COL 2\r\n555-555-1234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData("STR COL 1,STR COL 2\r\n555-555-0000,01/02/1991\r\n555-555-2345,12/12/1968")]
+    public void TestSchemaValidationForStringFields_Success_Format(string csvContent)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson06
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.True(result.IsValid);
+    }
+    
+    [Theory]
+    [InlineData(15, "STR COL 1,STR COL 2\r\n555-555-123,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(18, "STR COL 1,STR COL 2\r\n555_555_1234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(17, "STR COL 1,STR COL 2\r\n555-555-123A,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(17, "STR COL 1,STR COL 2\r\n555-555-A234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(17, "STR COL 1,STR COL 2\r\n555-555-$234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(17, "STR COL 1,STR COL 2\r\n555-555-#234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(17, "STR COL 1,STR COL 2\r\nA55-555-1234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(17, "STR COL 1,STR COL 2\r\n$55-555-1234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(17, "STR COL 1,STR COL 2\r\n#55-555-1234,12/12/2004\r\n555-555-2345,12/12/1972")]
+    [InlineData(16, "STR COL 1,STR COL 2\r\n555-555-0000,01/02/199\r\n555-555-2345,12/12/1968")]
+    [InlineData(16, "STR COL 1,STR COL 2\r\n555-555-0000,01/02/19\r\n555-555-2345,12/12/1968")]
+    [InlineData(16, "STR COL 1,STR COL 2\r\n555-555-0000,1/2/1991\r\n555-555-2345,12/12/1968")]
+    [InlineData(16, "STR COL 1,STR COL 2\r\n555-555-0000,12/2/1991\r\n555-555-2345,12/12/1968")]
+    [InlineData(16, "STR COL 1,STR COL 2\r\n555-555-0000,1/12/1991\r\n555-555-2345,12/12/1968")]
+    public void TestSchemaValidationForStringFields_Fail_Format(int expectedErrorCode, string csvContent)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = ',',
+            HasHeaderRow = true,
+            Quote = '\"',
+            ValidationProfile = ProfileJson06
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.Equal(expectedErrorCode, result.Messages[0].Code);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
         Assert.False(result.IsValid);
     }
     
