@@ -26,7 +26,7 @@ public class CsvFieldValidator_String_Format_Tests
         },
         {
             ""name"": ""STR COL 2"",
-            ""description"": """",
+            ""description"": ""String type, tests for FORMAT"",
             ""ordinal"": 2,
             ""type"": ""string"",
             ""max"": 45,
