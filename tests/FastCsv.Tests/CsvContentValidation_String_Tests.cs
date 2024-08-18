@@ -127,30 +127,6 @@ public sealed class CsvContentValidation_String_Tests
     ]
 }";
     
-    private static readonly string ProfileJson03 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
-    ""name"": ""Case Records"",
-    ""description"": ""Case Records for Bureaucratitis 2020"",
-    ""filename"": ""abc123.csv"",
-    ""separator"": "","",
-    ""has_header"": true,
-    ""columns"": [
-        {
-            ""name"": ""STR COL 1"",
-            ""description"": """",
-            ""ordinal"": 1,
-            ""type"": ""enum"",
-            ""values"": [ ""Confirmed"", ""Probable"", ""Suspect"" ],
-            ""max"": 15,
-            ""min"": 10,
-            ""required"": false,
-            ""null_or_empty"": true,
-            ""format"": null,
-            ""regex"": null
-        }
-    ]
-}";
-    
     private static readonly string ProfileJson06 = @"{
     ""$schema"": ""fast-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",

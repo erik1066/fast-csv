@@ -80,53 +80,6 @@ public sealed class ValidationProfileTests
     ]
 }";
     
-    private static readonly string ProfileJson02 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
-    ""name"": ""Case Records"",
-    ""description"": ""Case Records for Bureaucratitis 2020"",
-    ""filename"": ""abc123.csv"",
-    ""separator"": "","",
-    ""has_header"": true,
-    ""columns"": [
-        {
-            ""name"": ""STR COL 1"",
-            ""description"": """",
-            ""ordinal"": 1,
-            ""type"": ""string"",
-            ""max"": 15,
-            ""min"": 10,
-            ""required"": false,
-            ""null_or_empty"": true,
-            ""format"": null,
-            ""regex"": null
-        },
-        {
-            ""name"": ""STR COL 2"",
-            ""description"": """",
-            ""ordinal"": 2,
-            ""type"": ""string"",
-            ""max"": 255,
-            ""min"": 0,
-            ""required"": true,
-            ""null_or_empty"": false,
-            ""format"": null,
-            ""regex"": null
-        },
-        {
-            ""name"": ""STR COL 3"",
-            ""description"": """",
-            ""ordinal"": 3,
-            ""type"": ""string"",
-            ""max"": 255,
-            ""min"": 1,
-            ""required"": false,
-            ""null_or_empty"": false,
-            ""format"": null,
-            ""regex"": null
-        }
-    ]
-}";
-    
     [Fact]
     public void TestProfileCreation01()
     {

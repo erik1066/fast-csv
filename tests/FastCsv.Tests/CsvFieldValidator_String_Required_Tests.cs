@@ -50,29 +50,6 @@ public class CsvFieldValidator_String_Required_Tests
     ]
 }";
     
-    private static readonly string ProfileJson03 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
-    ""name"": ""Case Records"",
-    ""description"": ""Case Records for Bureaucratitis 2020"",
-    ""filename"": ""abc123.csv"",
-    ""separator"": "","",
-    ""has_header"": true,
-    ""columns"": [
-        {
-            ""name"": ""STR COL 1"",
-            ""description"": ""String type, tests for REQUIRED"",
-            ""ordinal"": 1,
-            ""type"": ""string"",
-            ""max"": 4096,
-            ""min"": 0,
-            ""required"": false,
-            ""null_or_empty"": true,
-            ""format"": null,
-            ""regex"": null
-        }
-    ]
-}";
-    
     [Theory]
     [InlineData(1, 1, "STR COL 1", " ")]
     [InlineData(1, 1, "STR COL 1", "1")]
