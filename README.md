@@ -1,6 +1,10 @@
 # Fast CSV Validator and Transformer
 
-A .NET library for fast and efficient parsing, validation, and transformation of CSV files. 
+A .NET library for fast and efficient validation and transformation of CSV files. 
+
+Structural CSV validation rules adhere to [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180). 
+
+Additional content validation rules can be configured by supplying an *optional* JSON [validation profile](validator-config-schema.json). A validation profile allows specifying column names, data types, column rules (e.g. if data for that column are required, what the min/max length should be, and so on). 
 
 ## Usage
 
