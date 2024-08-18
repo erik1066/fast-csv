@@ -104,6 +104,11 @@ public class CsvFieldValidator_Integer_Length_Tests
     [Theory]
     [InlineData(20, 1, 1, "STR COL 1", "ABCD")]
     [InlineData(20, 1, 1, "STR COL 1", "-1A")]
+    [InlineData(20, 1, 1, "STR COL 1", "--1")]
+    [InlineData(20, 1, 1, "STR COL 1", "0.1")]
+    [InlineData(20, 1, 1, "STR COL 1", "0.12")]
+    [InlineData(20, 1, 1, "STR COL 1", "09.12")]
+    [InlineData(20, 1, 1, "STR COL 1", "3.14")]
     [InlineData(20, 1, 1, "STR COL 1", "32AF")]
     [InlineData(20, 1, 1, "STR COL 1", "0x00FF")]
     public void TestValidateIntegerField_TypeCheck_Fail(int expectedCode, int rowNum, int colPos, string colName, string fieldContent)
