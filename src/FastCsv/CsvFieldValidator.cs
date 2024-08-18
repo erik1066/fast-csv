@@ -38,6 +38,9 @@ public class CsvFieldValidator : IFieldValidator
             case "integer":
                 messages.AddRange(ValidateIntegerField(field, rowNumber, fieldPosition, columnProfile));
                 break;
+            case "decimal":
+                messages.AddRange(ValidateDecimalField(field, rowNumber, fieldPosition, columnProfile));
+                break;
         }
 
         return messages;
@@ -320,7 +323,7 @@ public class CsvFieldValidator : IFieldValidator
     {
         List<ValidationMessage> messages = new List<ValidationMessage>();
         
-        bool success = Int64.TryParse(field, NumberStyles.Integer, CultureInfo.CurrentCulture, out Int64 fieldValue);
+        bool success = Int64.TryParse(field, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.CurrentCulture, out Int64 fieldValue);
 
         if (!success)
         {
@@ -362,6 +365,68 @@ public class CsvFieldValidator : IFieldValidator
             var errorMessage = new ValidationMessage()
             {
                 Code = 22,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must not be less than {columnProfile.Min}.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            };
+            messages.Add(errorMessage);
+        }
+
+        messages.AddRange(ValidateGenericFieldProperties(field, rowNumber, fieldPosition, columnProfile));
+        
+        return messages;
+    }
+    
+    private List<ValidationMessage> ValidateDecimalField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition, ValidationColumnProfile columnProfile)
+    {
+        List<ValidationMessage> messages = new List<ValidationMessage>();
+        
+        bool success = double.TryParse(field, NumberStyles.Float | NumberStyles.Integer | NumberStyles.Number | NumberStyles.AllowThousands | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.CurrentCulture, out double fieldValue);
+
+        if (!success)
+        {
+            messages.Add(new ValidationMessage()
+            {
+                Code = 30,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must be a number.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            });
+
+            return messages;
+        }
+        
+        // Check Max
+        if (fieldValue > columnProfile.Max)
+        {
+            var errorMessage = new ValidationMessage()
+            {
+                Code = 31,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must not be greater than {columnProfile.Max}.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            };
+            messages.Add(errorMessage);
+        }
+        
+        // Check Min
+        if (fieldValue < columnProfile.Min)
+        {
+            var errorMessage = new ValidationMessage()
+            {
+                Code = 32,
                 Severity = Severity.Error,
                 Content = $"Field '{columnProfile.Name}' must not be less than {columnProfile.Min}.",
                 MessageType = ValidationMessageType.Content,
