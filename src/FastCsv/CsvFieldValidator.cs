@@ -35,6 +35,9 @@ public class CsvFieldValidator : IFieldValidator
             case "string":
                 messages.AddRange(ValidateStringField(field, rowNumber, fieldPosition, columnProfile));
                 break;
+            case "integer":
+                messages.AddRange(ValidateIntegerField(field, rowNumber, fieldPosition, columnProfile));
+                break;
         }
 
         return messages;
@@ -127,54 +130,7 @@ public class CsvFieldValidator : IFieldValidator
             messages.Add(errorMessage);
         }
         
-        // check required
-        if (field.Length == 0 && columnProfile.Required)
-        {
-            var errorMessage = new ValidationMessage()
-            {
-                Code = 12,
-                Severity = Severity.Error,
-                Content = $"Field '{columnProfile.Name}' is required.",
-                MessageType = ValidationMessageType.Content,
-                Row = rowNumber,
-                FieldNumber = fieldPosition,
-                FieldName = columnProfile.Name,
-                Character = -1
-            };
-            messages.Add(errorMessage);
-        }
-        else if (field.Length == 0 && columnProfile.CanBeNullOrEmpty == false)
-        {
-            var errorMessage = new ValidationMessage()
-            {
-                Code = 13,
-                Severity = Severity.Error,
-                Content = $"Field '{columnProfile.Name}' must not be null or empty.",
-                MessageType = ValidationMessageType.Content,
-                Row = rowNumber,
-                FieldNumber = fieldPosition,
-                FieldName = columnProfile.Name,
-                Character = -1
-            };
-            messages.Add(errorMessage);
-        }
-        // check null or empty
-        else if (field.Length == 4 && field[0] == 'n' && field[1] == 'u' && field[2] == 'l' && field[3] == 'l' &&
-            columnProfile.CanBeNullOrEmpty == false)
-        {
-            var errorMessage = new ValidationMessage()
-            {
-                Code = 14,
-                Severity = Severity.Error,
-                Content = $"Field '{columnProfile.Name}' must not be null.",
-                MessageType = ValidationMessageType.Content,
-                Row = rowNumber,
-                FieldNumber = fieldPosition,
-                FieldName = columnProfile.Name,
-                Character = -1
-            };
-            messages.Add(errorMessage);
-        }
+        messages.AddRange(ValidateGenericFieldProperties(field, rowNumber, fieldPosition, columnProfile));
         
         if (!string.IsNullOrEmpty(columnProfile.Format))
         {
@@ -277,7 +233,6 @@ public class CsvFieldValidator : IFieldValidator
             }
         }
         
-        // TODO: Check regular expression
         if (!string.IsNullOrWhiteSpace(columnProfile.Regex))
         {
             string fieldValue = field.ToString();
@@ -300,6 +255,125 @@ public class CsvFieldValidator : IFieldValidator
                 messages.Add(errorMessage);
             }
         }
+        
+        return messages;
+    }
+
+    private List<ValidationMessage> ValidateGenericFieldProperties(ReadOnlySpan<char> field, int rowNumber, int fieldPosition,
+        ValidationColumnProfile columnProfile)
+    {
+        List<ValidationMessage> messages = new List<ValidationMessage>();
+        
+        // check required
+        if (field.Length == 0 && columnProfile.Required)
+        {
+            var errorMessage = new ValidationMessage()
+            {
+                Code = 12,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' is required.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            };
+            messages.Add(errorMessage);
+        }
+        else if (field.Length == 0 && columnProfile.CanBeNullOrEmpty == false)
+        {
+            var errorMessage = new ValidationMessage()
+            {
+                Code = 13,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must not be null or empty.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            };
+            messages.Add(errorMessage);
+        }
+        // check null or empty
+        else if (field.Length == 4 && field[0] == 'n' && field[1] == 'u' && field[2] == 'l' && field[3] == 'l' &&
+                 columnProfile.CanBeNullOrEmpty == false)
+        {
+            var errorMessage = new ValidationMessage()
+            {
+                Code = 14,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must not be null.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            };
+            messages.Add(errorMessage);
+        }
+
+        return messages;
+    }
+    
+    private List<ValidationMessage> ValidateIntegerField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition, ValidationColumnProfile columnProfile)
+    {
+        List<ValidationMessage> messages = new List<ValidationMessage>();
+        
+        bool success = Int64.TryParse(field, NumberStyles.Integer, CultureInfo.CurrentCulture, out Int64 fieldValue);
+
+        if (!success)
+        {
+            messages.Add(new ValidationMessage()
+            {
+                Code = 20,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must be an integer.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            });
+
+            return messages;
+        }
+        
+        // Check Max
+        if (fieldValue > columnProfile.Max)
+        {
+            var errorMessage = new ValidationMessage()
+            {
+                Code = 21,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must not be greater than {columnProfile.Max}.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            };
+            messages.Add(errorMessage);
+        }
+        
+        // Check Min
+        if (fieldValue < columnProfile.Min)
+        {
+            var errorMessage = new ValidationMessage()
+            {
+                Code = 22,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must not be less than {columnProfile.Min}.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            };
+            messages.Add(errorMessage);
+        }
+
+        messages.AddRange(ValidateGenericFieldProperties(field, rowNumber, fieldPosition, columnProfile));
         
         return messages;
     }
