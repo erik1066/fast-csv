@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Xml;
 
 namespace FastCsv;
 
@@ -40,6 +41,9 @@ public class CsvFieldValidator : IFieldValidator
                 break;
             case "decimal":
                 messages.AddRange(ValidateDecimalField(field, rowNumber, fieldPosition, columnProfile));
+                break;
+            case "boolean":
+                messages.AddRange(ValidateBooleanField(field, rowNumber, fieldPosition, columnProfile));
                 break;
         }
 
@@ -323,6 +327,8 @@ public class CsvFieldValidator : IFieldValidator
     {
         List<ValidationMessage> messages = new List<ValidationMessage>();
         
+        if (columnProfile.Required == false && field.Length == 0) return messages;
+        
         bool success = Int64.TryParse(field, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.CurrentCulture, out Int64 fieldValue);
 
         if (!success)
@@ -385,6 +391,8 @@ public class CsvFieldValidator : IFieldValidator
     {
         List<ValidationMessage> messages = new List<ValidationMessage>();
         
+        if (columnProfile.Required == false && field.Length == 0) return messages;
+        
         bool success = double.TryParse(field, NumberStyles.Float | NumberStyles.Integer | NumberStyles.Number | NumberStyles.AllowThousands | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.CurrentCulture, out double fieldValue);
 
         if (!success)
@@ -436,6 +444,36 @@ public class CsvFieldValidator : IFieldValidator
                 Character = -1
             };
             messages.Add(errorMessage);
+        }
+
+        messages.AddRange(ValidateGenericFieldProperties(field, rowNumber, fieldPosition, columnProfile));
+        
+        return messages;
+    }
+    
+    private List<ValidationMessage> ValidateBooleanField(ReadOnlySpan<char> field, int rowNumber, int fieldPosition, ValidationColumnProfile columnProfile)
+    {
+        List<ValidationMessage> messages = new List<ValidationMessage>();
+
+        if (columnProfile.Required == false && field.Length == 0) return messages;
+        
+        bool success = bool.TryParse(field, out bool fieldValue);
+
+        if (!success)
+        {
+            messages.Add(new ValidationMessage()
+            {
+                Code = 40,
+                Severity = Severity.Error,
+                Content = $"Field '{columnProfile.Name}' must be a boolean value, either true or false.",
+                MessageType = ValidationMessageType.Content,
+                Row = rowNumber,
+                FieldNumber = fieldPosition,
+                FieldName = columnProfile.Name,
+                Character = -1
+            });
+
+            return messages;
         }
 
         messages.AddRange(ValidateGenericFieldProperties(field, rowNumber, fieldPosition, columnProfile));
