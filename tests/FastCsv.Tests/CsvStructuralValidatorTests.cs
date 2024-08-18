@@ -244,6 +244,44 @@ public class CsvStructuralValidatorTests
         Assert.Equal(1, result.DataRowCount);
     }
     
+    [Theory]
+    [InlineData(',', 1, "NAME\r\nMARY")]
+    [InlineData(',', 2, "NAME,AGE\r\nMARY,25")]
+    [InlineData(';', 2, "NAME;AGE\r\nMARY;25")]
+    [InlineData('|', 2, "NAME|AGE\r\nMARY|25")]
+    [InlineData('/', 2, "NAME/AGE\r\nMARY/25")]
+    [InlineData('-', 2, "NAME-AGE\r\nMARY-25")]
+    [InlineData(',', 2, "\"FIRST NAME, LAST NAME\",AGE\r\n\"MARY SUAREZ\",25")]
+    [InlineData(';', 2, "\"FIRST NAME, LAST NAME\";AGE\r\n\"MARY SUAREZ\";25")]
+    [InlineData(';', 2, "\"FIRST NAME; LAST NAME\";AGE\r\n\"MARY SUAREZ\";25")]
+    [InlineData(',', 2, "\"LAST NAME, FIRST NAME\",AGE\r\n\"SUAREZ, MARY\",25")]
+    [InlineData(';', 2, "\"LAST NAME, FIRST NAME\";AGE\r\n\"SUAREZ, MARY\";25")]
+    [InlineData(';', 2, "\"LAST NAME; FIRST NAME\";AGE\r\n\"SUAREZ; MARY\";25")]
+    [InlineData('\t', 2, "NAME\tAGE\r\nMARY\t25")]
+    [InlineData(';', 3, "NAME;AGE;ADDRESS\r\nMARY;25;\"123 Main Street Anytown, NY 12345\"")]
+    [InlineData(',', 3, "NAME,AGE,ADDRESS\r\nMARY,25,\"123 Main Street Anytown, NY 12345\"")]
+    [InlineData('\t', 3, "NAME\tAGE\tADDRESS\r\nMARY\t25\t\"123 Main Street Anytown, NY 12345\"")]
+    public void TestSeparator(char separator, int expectedFieldCount, string csvContent)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = separator,
+            HasHeaderRow = true
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(0, result.WarningCount);
+        Assert.Equal(expectedFieldCount, result.FieldCount);
+        Assert.Empty(result.Messages);
+        Assert.True(result.IsValid);
+        Assert.Equal(1, result.DataRowCount);
+    }
+    
     private static Stream GenerateStreamFromString(string s)
     {
         var stream = new MemoryStream();
