@@ -261,7 +261,8 @@ public class CsvStructuralValidatorTests
     [InlineData(';', 3, "NAME;AGE;ADDRESS\r\nMARY;25;\"123 Main Street Anytown, NY 12345\"")]
     [InlineData(',', 3, "NAME,AGE,ADDRESS\r\nMARY,25,\"123 Main Street Anytown, NY 12345\"")]
     [InlineData('\t', 3, "NAME\tAGE\tADDRESS\r\nMARY\t25\t\"123 Main Street Anytown, NY 12345\"")]
-    public void TestSeparator(char separator, int expectedFieldCount, string csvContent)
+    [InlineData('\t', 3, "NAME\tAGE\tADDRESS\r\nMARY\t25\t\"123 Main Street\r\nAnytown, NY 12345\"")]
+    public void TestSeparatorWithHeaderRow(char separator, int expectedFieldCount, string csvContent)
     {
         CsvValidator validator = new CsvValidator();
         var options = new ValidationOptions()
@@ -280,6 +281,55 @@ public class CsvStructuralValidatorTests
         Assert.Empty(result.Messages);
         Assert.True(result.IsValid);
         Assert.Equal(1, result.DataRowCount);
+    }
+    
+    [Theory]
+    [InlineData(',', 1, 1, "MARY")]
+    [InlineData(',', 2, 1, "MARY\r\nJOHN")]
+    [InlineData(',', 3, 1, "MARY\r\nJANA\r\nHANA")]
+    [InlineData(',', 1, 2, "MARY,25")]
+    [InlineData(',', 2, 2, "MARY,25\r\nJOHN,25")]
+    [InlineData(',', 3, 2, "MARY,25\r\nJANA,25\r\nHANA,25")]
+    [InlineData(';', 1, 2, "MARY;25")]
+    [InlineData(';', 2, 2, "MARY;25\r\nJOSE;35")]
+    [InlineData(';', 3, 2, "MARY;25\r\nJOSE;35\r\nJUAN;45")]
+    [InlineData('|', 1, 2, "MARY|25")]
+    [InlineData('|', 2, 2, "MARY|25\r\nSUSAN|35")]
+    [InlineData('|', 3, 2, "MARY|25\r\nSUSAN|35\r\nKAREN|45")]
+    [InlineData('/', 1, 2, "MARY/25")]
+    [InlineData('-', 1, 2, "MARY-25")]
+    [InlineData(',', 1, 2, "\"MARY SUAREZ\",25")]
+    [InlineData(',', 2, 2, "\"MARY SUAREZ\",25\r\n\"JOSÉ MARTINEZ\",35")]
+    [InlineData(';', 1, 2, "\"MARY SUAREZ\";25")]
+    [InlineData(';', 2, 2, "\"MARY SUAREZ\";25\r\n\"JOSÉ MARTINEZ\";35")]
+    [InlineData(',', 1, 2, "\"SUAREZ, MARY\",25")]
+    [InlineData(';', 1, 2, "\"SUAREZ, MARY\";25")]
+    [InlineData(';', 1, 2, "\"SUAREZ; MARY\";25")]
+    [InlineData('\t', 1, 1, "MARY")]
+    [InlineData('\t', 1, 2, "MARY\t25")]
+    [InlineData(';', 1, 3, "MARY;25;\"123 Main Street Anytown, NY 12345\"")]
+    [InlineData(',', 1, 3, "MARY,25,\"123 Main Street Anytown, NY 12345\"")]
+    [InlineData('\t', 1, 3, "MARY\t25\t\"123 Main Street Anytown, NY 12345\"")]
+    [InlineData('\t', 1, 3, "MARY\t25\t\"123 Main Street\r\nAnytown, NY 12345\"")]
+    public void TestSeparatorWithoutHeaderRow(char separator, int expectedRowCount, int expectedFieldCount, string csvContent)
+    {
+        CsvValidator validator = new CsvValidator();
+        var options = new ValidationOptions()
+        {
+            Separator = separator,
+            HasHeaderRow = false
+        };
+
+        Stream content = GenerateStreamFromString(csvContent);
+        ValidationResult result = validator.Validate(content: content, options: options);
+        
+        Assert.True(result.ElapsedMilliseconds >= 0.0);
+        Assert.Equal(0, result.ErrorCount);
+        Assert.Equal(0, result.WarningCount);
+        Assert.Equal(expectedFieldCount, result.FieldCount);
+        Assert.Empty(result.Messages);
+        Assert.True(result.IsValid);
+        Assert.Equal(expectedRowCount, result.DataRowCount);
     }
     
     private static Stream GenerateStreamFromString(string s)
