@@ -88,7 +88,9 @@ public class CsvFieldValidator_String_Length_Tests
     [InlineData(11, 1, 1, "STR COL 1", "AB")]
     [InlineData(11, 1, 1, "STR COL 1", "ABC")]
     [InlineData(11, 1, 1, "STR COL 1", "ABCD")]
+    [InlineData(11, 1, 1, "STR COL 1", "ÉÁÉÁ")]
     [InlineData(10, 1, 1, "STR COL 1", "ABCDEFGHIJK")]
+    [InlineData(10, 1, 1, "STR COL 1", "ÉÁÉÁÇÈÉÊËÌÍÎÑÕÖÙÚ")]
     [InlineData(11, 1, 1, "STR COL 1", "    ")]
     [InlineData(10, 1, 1, "STR COL 1", "           ")]
     public void TestValidateStringField_Length_Fail(int expectedCode, int rowNum, int colPos, string colName, string fieldContent)
