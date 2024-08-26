@@ -31,16 +31,29 @@
                         "type": "string"
                     },
                     "description": {
-                        "type": ["string", "null"]
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "ordinal": {
                         "type": "integer"
                     },
                     "type": {
-                        "type": "string"
+                        "type": "enum",
+                        "enum": [
+                            "string",
+                            "enum",
+                            "integer",
+                            "decimal",
+                            "boolean"
+                        ]
                     },
                     "values": {
-                        "type": ["array", "null"],
+                        "type": [
+                            "array",
+                            "null"
+                        ],
                         "uniqueItems": true,
                         "maxnItems": 100,
                         "items": {
@@ -51,13 +64,22 @@
                         "type": "boolean"
                     },
                     "values_url": {
-                        "type": ["string", "null"]
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "max": {
-                        "type": ["integer", "null"]
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "min": {
-                        "type": ["integer", "null"]
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "required": {
                         "type": "boolean"

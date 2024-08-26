@@ -6,6 +6,12 @@ Structural CSV validation rules adhere to [RFC 4180](https://www.rfc-editor.org/
 
 Additional content validation rules can be configured by supplying an *optional* JSON [validation profile](validator-config-schema.json). A validation profile allows specifying column names, data types, column rules (e.g. if data for that column are required, what the min/max length should be, and so on). 
 
+## Performance
+
+RFC 4180 validation on a 40 column, 100,000 row CSV file takes 235 ms and allocates a total of 100 MB of memory on an old Intel laptop CPU from the 2010s. See [benchmark results](./Benchmarks.md) for more.
+
+You can run benchmarks using a special benchmarking project by navigating to `tests/FastCsv.Benchmarks` and running `dotnet run -c Release`.
+
 ## Basic Usage - Validate a CSV file against [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)
 
 1. Add a reference to FastCsv in your `.csproj` file:
