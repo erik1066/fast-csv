@@ -102,3 +102,55 @@ Valid File = True
 That's all there is to it.
 
 > This console app includes a hard-coded CSV file in `program.cs` to make it as simple as possible to run the example. A CSV input file is therefore not required.
+
+## Architecture and Design Decisions
+
+FastCsv is meant to be used in situations where one needs speed and memory efficiency _at scale_. For instance, if you're required to process CSV files in near real-time at high volume, where validation results are viewable by clients almost instantly after file submission, then this is a library worth considering. 
+
+This is also why the library was built and shapes the design decisions around why the code is written the way it is.
+
+### High performance and memory efficiency
+
+The use of `ReadOnlySpan<T>` in the library is intentional. A simpler way of dealing with CSV files might be to use `string.Split(',')` but this presents issues, namely that splitting strings copies the string's contents into new memory (the array of string fragments that the `Split()` method generates). This increases memory use, the extra allocations result in slightly slower code, and it increases the amount of garbage collection that must occur to clean up all that duplicated memory.
+
+By using `ReadOnlySpan<T>`, a lower-level API in .NET, we can get a view into a subset of the string instead of creating copies. Spans are harder to work with from a practical standpoint and make the code harder to read and maintain. 
+
+A state machine-like algorithm is needed to parse each line in a CSV file. The algorithm goes character-by-character over the `ReadOnlySpan<char>` and must keep track of things like whether it's in a quoted field or not in order to know how to interpret the current character. Meanwhile, it must validate what it finds.
+
+### No limits on file size
+
+FastCsv operates on streams. The whole CSV file does not need to be read at once, unlike some other competing libraries, and the fast performance means even larger files (e.g. 100k rows) can be validated in under 1 second.
+
+### Human-readable error messages
+
+Readable and understandable error messages are critical. Detected errors will give human-understandable outputs that even users with low technical skills should be able to understand, within reason.
+
+### Ease of use by developers
+
+The library is meant to be super easy to use by developers. It's one function call in one class:
+
+```cs
+CsvValidator validator = new CsvValidator();
+
+var options = new ValidationOptions()
+{
+    Separator = ',',
+    HasHeaderRow = true
+};
+
+ValidationResult result = validator.Validate(content: content, options: options);
+```
+
+In the code snippet above, we create a `validator` class, pass it some very basic `options`, and then call the validator's `validate` method. Without more advanced options this will validate the file against RFC 4180 specifications.
+
+The `content` in this case is of type `Stream`. You can then do useful things with the `result` type you get back, such as iterate over all the errors/warnings or read a boolean flag to see if the file is valid or invalid.
+
+There are more advanced things you can do with the `Validate` method such as specify a JSON content validation configuration, which will go beyond RFC 4180 and do things like check field content against your supplied regular expressions, data type specifications, min/max values, and other rules, but it is not required to supply such a configuration.
+
+### Few to no dependencies
+
+The software supply chain is hard to secure today. FastCsv currently uses no dependencies. 
+
+### Configurable content validation rules
+
+Do you need to go beyond RFC 4180 rules for your real-time CSV validation needs? The [validation rules](./validator-config-schema.json) allow you to specify some basic content validation checks, such as min/max length, regular expression checks, formatting checks, and data types. These show up as error type _Content_ to distinguish them from RFC 4180 errors, which show up as error type _Structural_. 
