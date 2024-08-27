@@ -5,7 +5,7 @@ namespace RapidCsv.Tests;
 public class CsvFieldValidator_String_Regex_Tests
 {
     private static readonly string ProfileJson01 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""$schema"": ""rapid-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
     ""filename"": ""abc123.csv"",
