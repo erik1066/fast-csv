@@ -1,4 +1,4 @@
-﻿using FastCsv;
+﻿using RapidCsv;
 
 string csvContent = @"NAME,AGE,DOB
 John,23,1/1/2012

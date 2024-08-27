@@ -1,6 +1,6 @@
 # Benchmark Results
 
-Benchmarks are run using BenchmarkDotNet. You can run these benchmarks yourself quite easily; just navigate to `tests/FastCsv.Benchmarks` and run `dotnet -c Release` in a terminal.
+Benchmarks are run using BenchmarkDotNet. You can run these benchmarks yourself quite easily; just navigate to `tests/RapidCsv.Benchmarks` and run `dotnet -c Release` in a terminal.
 
 | Method                              | Mean          | Error         | StdDev        | Median        | Min           | Max           | Gen0       | Gen1      | Gen2      | Allocated    |
 |------------------------------------ |--------------:|--------------:|--------------:|--------------:|--------------:|--------------:|-----------:|----------:|----------:|-------------:|
