@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Sdk Name="DotNet.ReproducibleBuilds.Isolated" Version="1.2.4" />
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Authors>Erik Knudsen</Authors>
