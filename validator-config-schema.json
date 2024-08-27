@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/erik1066/fast-csv/validator-config-schema.json",
+    "$id": "https://github.com/erik1066/rapid-csv/validator-config-schema.json",
     "title": "Validation Schema for CSV Files",
     "description": "This is a schema for representing a JSON congifuration file for validation of CSV files.",
     "type": "object",

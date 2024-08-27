@@ -5,7 +5,7 @@ namespace RapidCsv.Tests;
 public sealed class CsvContentValidation_Enum_Tests
 {
     private static readonly string ProfileJson03 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""$schema"": ""rapid-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
     ""filename"": ""abc123.csv"",
@@ -29,7 +29,7 @@ public sealed class CsvContentValidation_Enum_Tests
 }";
     
     private static readonly string ProfileJson04 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""$schema"": ""rapid-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
     ""filename"": ""abc123.csv"",
@@ -53,7 +53,7 @@ public sealed class CsvContentValidation_Enum_Tests
 }";
     
     private static readonly string ProfileJson05 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""$schema"": ""rapid-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
     ""filename"": ""abc123.csv"",

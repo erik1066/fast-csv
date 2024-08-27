@@ -5,7 +5,7 @@ namespace RapidCsv.Tests;
 public sealed class CsvContentValidation_String_Tests
 {
     private static readonly string ProfileJson01 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""$schema"": ""rapid-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
     ""filename"": ""abc123.csv"",
@@ -81,7 +81,7 @@ public sealed class CsvContentValidation_String_Tests
 }";
     
     private static readonly string ProfileJson02 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""$schema"": ""rapid-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
     ""filename"": ""abc123.csv"",
@@ -128,7 +128,7 @@ public sealed class CsvContentValidation_String_Tests
 }";
     
     private static readonly string ProfileJson06 = @"{
-    ""$schema"": ""fast-csv/validator-config-schema.json"",
+    ""$schema"": ""rapid-csv/validator-config-schema.json"",
     ""name"": ""Case Records"",
     ""description"": ""Case Records for Bureaucratitis 2020"",
     ""filename"": ""abc123.csv"",

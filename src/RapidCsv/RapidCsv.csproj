@@ -18,7 +18,7 @@
     <Version>0.0.1</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <RepositoryUrl>https://github.com/erik1066/fast-csv</RepositoryUrl>
+    <RepositoryUrl>https://github.com/erik1066/rapid-csv</RepositoryUrl>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
