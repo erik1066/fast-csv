@@ -75,7 +75,7 @@ static Stream GenerateStreamFromString(string s)
 
 The [examples](/examples/) folder contains example code that demonstrates how to use RapidCsv.
 
-### Simplest Example: .NET Console App
+### Example #1: RFC 4180 validation in a .NET Console App
 
 Let's look at the `RapidCsv.ConsoleDemo` project. 
 
@@ -104,6 +104,122 @@ Valid File = True
 That's all there is to it.
 
 > This console app includes a hard-coded CSV file in `program.cs` to make it as simple as possible to run the example. A CSV input file is therefore not required.
+
+### Example #2: Profile-driven content validation
+
+See [demo-console-content-validation](./examples/demo-console-content-validation/) for working and runnable code that uses the example below.
+
+Let's say you want more than RFC 4180 validation. Perhaps you have a CSV file like the one below:
+
+
+```
+NAME,AGE,DOB,PHONE,STATUS
+John,23,1/1/2012,555-555-5555,actv
+Mary,34,1/1/1990,555-555-5555,inac
+Jane,25,1/1/2010,555-555-5555,actv
+Hana,55,1/1/1970,555-555-555X,unkn
+```
+
+Let's suppose we want to validate this CSV file on the following rules:
+
+1. `NAME` must be 0-25 characters
+1. `AGE` must be an integer
+1. `DOB` must use `m/d/yyyy` format
+1. `PHONE` must be a valid 10-digit US phone number
+1. `STATUS` must be one of two values, `actv` or `inac`; all other values are invalid
+
+We can create an optional validation profile in JSON:
+
+```json
+{
+    "$schema": "rapid-csv/validator-config-schema.json",
+    "name": "Acme Bookstore Customer Records",
+    "description": "Validation profile for the CSV records of our Acme bookstore customers",
+    "filename": "abc123.csv",
+    "separator": ",",
+    "has_header": true,
+    "columns": [
+        {
+            "name": "NAME",
+            "description": "The customer's name",
+            "ordinal": 1,
+            "type": "string",
+            "max": 25,
+            "min": 0,
+            "required": false,
+            "null_or_empty": true,
+            "format": null,
+            "regex": null
+        },
+        {
+            "name": "AGE",
+            "description": "The customer's age",
+            "ordinal": 2,
+            "type": "integer",
+            "max": 125,
+            "min": 7,
+            "required": false,
+            "null_or_empty": true,
+            "format": null,
+            "regex": null
+        },
+        {
+            "name": "DOB",
+            "description": "The customer's date of birth",
+            "ordinal": 3,
+            "type": "string",
+            "required": false,
+            "null_or_empty": true,
+            "format": "m/d/yyyy",
+            "regex": null
+        },
+        {
+            "name": "PHONE",
+            "description": "The customer's phone number",
+            "ordinal": 4,
+            "type": "string",
+            "required": false,
+            "null_or_empty": true,
+            "format": null,
+            "regex": "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$"
+        },
+        {
+            "name": "STATUS",
+            "description": "Customer status",
+            "ordinal": 5,
+            "type": "enum",
+            "values": [ "actv", "inac" ],
+            "required": false,
+            "null_or_empty": true,
+            "format": null,
+            "regex": null
+        }
+    ]
+};
+```
+Note the use of the `format` property in the `DOB` column definition, the `regex` for the `PHONE` column, the use of `min` and `max` for `NAME`, and the `enum` with `values` in the `STATUS` column. These are how we define the five rules outlined earlier.
+
+Using the profile is straightforward:
+
+```csharp
+CsvValidator validator = new CsvValidator();
+var options = new ValidationOptions()
+{
+    Separator = ',',
+    HasHeaderRow = true,
+    ValidationProfile = validationProfile
+};
+
+Stream content = GenerateStreamFromString(csvContent);
+ValidationResult result = validator.Validate(content: content, options: options);
+```
+
+In other words, we read the raw JSON into memory and assign it to the `ValidationProfile` property of the `ValidationOptions` object. The validator will then use the profile to execute these content checks. 
+
+Since `ValidationProfile` is optional and can be empty, leaving it empty will conduct basic RFC 4180 checks only and apply no content validation rules.
+
+The added overhead of these profile-driven content checks can be significant in terms of performance when running the validator at scale. Use caution in applying these rules and only apply them when real-time content validation is required for the use case.
+
 
 ## Architecture and Design Decisions
 
