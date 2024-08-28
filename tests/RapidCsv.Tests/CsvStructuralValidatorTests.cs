@@ -64,6 +64,11 @@ public class CsvStructuralValidatorTests
     [InlineData(true, "\"LAST,FIRST NAME\",AGE,DOB\r\n\"Doe, John\",23,1/1/2000\r\n\"Sue, Mary\",34,1/1/2000", 2, 3)]
     [InlineData(true, "\"FULL NAME\",AGE,DOB\r\n\"John Doe\",23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
     [InlineData(true, "\"FULL NAME\",\"AGE\",\"DOB\"\r\n\"John Doe\",\"23\",\"1/1/2000\"\r\n\"Mary Sue\",\"34\",\"1/1/2000\"", 2, 3)]
+    [InlineData(true, "ʺNAMEʺ,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "ˮNAMEˮ,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "˵NAME˵,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "˶NAME˶,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
+    [InlineData(true, "˝NAME˝,AGE,DOB\r\nJohn,23,1/1/2000\r\nMary,34,1/1/2000", 2, 3)]
     public void TestQuotedFields(bool isValid, string csvContent, int expectedDataRows, int expectedFieldCount)
     {
         CsvValidator validator = new CsvValidator();
