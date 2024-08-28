@@ -22,7 +22,7 @@ You can run benchmarks using a special benchmarking project by navigating to `te
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\RapidCsv\RapidCsv.csproj" />
+    <PackageReference Include="RapidCsv" Version="0.0.1" />
   </ItemGroup>
 
   <PropertyGroup>
