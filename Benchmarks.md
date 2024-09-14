@@ -2,26 +2,6 @@
 
 Benchmarks are run using BenchmarkDotNet. You can run these benchmarks yourself quite easily; just navigate to `tests/RapidCsv.Benchmarks` and run `dotnet -c Release` in a terminal.
 
-| Method                              | Mean          | Error         | StdDev        | Median        | Min           | Max           | Gen0       | Gen1      | Gen2      | Allocated    |
-|------------------------------------ |--------------:|--------------:|--------------:|--------------:|--------------:|--------------:|-----------:|----------:|----------:|-------------:|
-| Validate_Failed_10Cols_by_100Rows   |      87.61 us |      2.266 us |      6.538 us |      88.00 us |      77.34 us |     107.83 us |     7.9346 |    0.6104 |         - |        65 KB |
-| Validate_Failed_10Cols_by_1kRows    |     918.53 us |     45.356 us |    130.136 us |     864.36 us |     710.28 us |   1,269.32 us |    64.4531 |   23.4375 |         - |    536.83 KB |
-| Validate_Failed_10Cols_by_10kRows   |   9,371.06 us |    541.558 us |  1,553.833 us |   9,222.48 us |   7,360.58 us |  14,662.51 us |   632.8125 |  453.1250 |         - |   5197.88 KB |
-| Validate_Failed_10Cols_by_100kRows  | 137,255.74 us | 10,101.840 us | 28,657.241 us | 132,103.95 us |  98,605.46 us | 213,613.10 us |  6800.0000 | 2800.0000 | 1000.0000 |  53408.86 KB |
-| Validate_Success_10Cols_by_100Rows  |      51.92 us |      3.533 us |      9.964 us |      49.83 us |      38.82 us |      81.14 us |     5.5542 |    0.1831 |         - |     45.78 KB |
-| Validate_Success_10Cols_by_1kRows   |     454.80 us |     24.300 us |     67.739 us |     450.06 us |     348.11 us |     687.20 us |    42.9688 |    0.9766 |         - |    355.17 KB |
-| Validate_Success_10Cols_by_10kRows  |   4,224.42 us |    227.174 us |    659.073 us |   4,162.00 us |   3,109.66 us |   5,769.80 us |   421.8750 |   11.7188 |         - |      3449 KB |
-| Validate_Success_10Cols_by_100kRows |  32,516.19 us |    270.185 us |    225.617 us |  32,519.53 us |  32,156.01 us |  32,936.94 us |  4153.8462 |         - |         - |  34386.67 KB |
-| Validate_Success_20Cols_by_100Rows  |     134.93 us |      8.406 us |     24.520 us |     134.45 us |     100.74 us |     209.09 us |     9.2773 |    0.3662 |         - |     76.53 KB |
-| Validate_Success_20Cols_by_1kRows   |   1,150.73 us |     66.373 us |    187.208 us |   1,068.95 us |     901.67 us |   1,759.82 us |    78.1250 |    1.9531 |         - |    639.75 KB |
-| Validate_Success_20Cols_by_10kRows  |  12,448.11 us |    635.278 us |  1,863.160 us |  11,975.67 us |   9,421.97 us |  17,774.58 us |   765.6250 |   15.6250 |         - |   6271.93 KB |
-| Validate_Success_20Cols_by_100kRows |  97,025.14 us |  1,817.465 us |  1,700.058 us |  96,638.03 us |  94,944.54 us | 100,262.43 us |  7600.0000 |         - |         - |  62592.42 KB |
-| Validate_Success_40Cols_by_100Rows  |     255.74 us |     15.963 us |     47.066 us |     238.39 us |     204.69 us |     389.98 us |    14.8926 |    0.4883 |         - |    122.39 KB |
-| Validate_Success_40Cols_by_1kRows   |   2,186.90 us |     43.609 us |     87.092 us |   2,195.55 us |   2,004.72 us |   2,361.03 us |   125.0000 |    3.9063 |         - |   1051.25 KB |
-| Validate_Success_40Cols_by_10kRows  |  22,161.61 us |  1,374.638 us |  3,763.050 us |  21,557.15 us |  18,080.27 us |  35,861.67 us |  1250.0000 |   31.2500 |         - |  10339.73 KB |
-| Validate_Success_40Cols_by_100kRows | 235,141.48 us | 11,723.216 us | 33,636.107 us | 237,224.67 us | 180,311.23 us | 321,101.68 us | 12000.0000 |         - |         - | 103223.23 KB |
-
-
 ```
 // * Legends *
   Mean      : Arithmetic mean of all measurements
@@ -36,4 +16,30 @@ Benchmarks are run using BenchmarkDotNet. You can run these benchmarks yourself 
   Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
   1 us      : 1 Microsecond (0.000001 sec)
 
+```
+
+- AMD Ryzen 7 7840U
+- .NET 8.0.824.36612
+- RapidCSV [version 0.0.1](https://github.com/erik1066/rapid-csv/releases/tag/v0.0.1)
+
+| Method                                      | Mean         | Error        | StdDev       | Median       | Min          | Max           | Gen0       | Gen1      | Gen2      | Allocated    |
+|-------------------------------------------- |-------------:|-------------:|-------------:|-------------:|-------------:|--------------:|-----------:|----------:|----------:|-------------:|
+| RFC4180_Validate_Failed_10Cols_by_100Rows   |     69.65 us |     1.386 us |     2.736 us |     69.79 us |     64.11 us |      75.01 us |     7.9346 |    0.6104 |         - |     65.07 KB |
+| RFC4180_Validate_Failed_10Cols_by_1kRows    |    599.13 us |    11.808 us |    24.385 us |    599.13 us |    549.21 us |     644.50 us |    65.4297 |   24.4141 |         - |     536.9 KB |
+| RFC4180_Validate_Failed_10Cols_by_10kRows   |  6,403.38 us |   136.472 us |   402.390 us |  6,192.36 us |  5,915.31 us |   7,444.69 us |   632.8125 |  453.1250 |         - |   5197.95 KB |
+| RFC4180_Validate_Failed_10Cols_by_100kRows  | 85,303.55 us | 1,681.323 us | 2,001.496 us | 85,750.85 us | 82,260.69 us |  89,941.03 us |  6857.1429 | 2857.1429 | 1142.8571 |  53408.15 KB |
+| RFC4180_Validate_Success_10Cols_by_100Rows  |     29.53 us |     0.367 us |     0.343 us |     29.56 us |     28.64 us |      30.08 us |     5.5847 |    0.1831 |         - |     45.85 KB |
+| RFC4180_Validate_Success_10Cols_by_1kRows   |    192.12 us |     1.913 us |     1.790 us |    192.17 us |    189.52 us |     196.02 us |    43.4570 |    1.4648 |         - |    355.24 KB |
+| RFC4180_Validate_Success_10Cols_by_10kRows  |  1,899.56 us |    28.611 us |    26.763 us |  1,904.07 us |  1,838.69 us |   1,933.93 us |   421.8750 |   13.6719 |         - |   3449.06 KB |
+| RFC4180_Validate_Success_10Cols_by_100kRows | 18,611.56 us |   263.794 us |   246.753 us | 18,710.24 us | 18,036.03 us |  18,902.17 us |  4187.5000 |   31.2500 |         - |   34386.7 KB |
+| RFC4180_Validate_Success_20Cols_by_100Rows  |     61.67 us |     0.472 us |     0.418 us |     61.69 us |     60.92 us |      62.42 us |     9.2773 |    0.3662 |         - |      76.6 KB |
+| RFC4180_Validate_Success_20Cols_by_1kRows   |    505.83 us |     6.517 us |     5.777 us |    507.43 us |    492.36 us |     511.61 us |    78.1250 |    2.9297 |         - |    639.82 KB |
+| RFC4180_Validate_Success_20Cols_by_10kRows  |  5,300.66 us |    78.941 us |    73.841 us |  5,279.84 us |  5,164.44 us |   5,441.62 us |   765.6250 |   23.4375 |         - |      6272 KB |
+| RFC4180_Validate_Success_20Cols_by_100kRows | 51,013.63 us |   742.285 us |   694.334 us | 51,016.30 us | 50,104.02 us |  52,020.86 us |  7600.0000 |         - |         - |  62592.42 KB |
+| RFC4180_Validate_Success_40Cols_by_100Rows  |    118.88 us |     2.188 us |     2.247 us |    119.96 us |    112.83 us |     121.03 us |    14.8926 |    0.6104 |         - |    122.46 KB |
+| RFC4180_Validate_Success_40Cols_by_1kRows   |    979.49 us |    11.293 us |    10.563 us |    979.75 us |    961.53 us |     997.01 us |   126.9531 |    5.8594 |         - |   1051.32 KB |
+| RFC4180_Validate_Success_40Cols_by_10kRows  | 10,109.05 us |    69.819 us |    65.309 us | 10,108.29 us |  9,973.82 us |  10,232.21 us |  1265.6250 |   46.8750 |         - |  10339.79 KB |
+| RFC4180_Validate_Success_40Cols_by_100kRows | 99,714.61 us |   986.590 us |   922.857 us | 99,867.65 us | 98,288.90 us | 101,061.86 us | 12500.0000 |         - |         - | 103222.71 KB |
+| Content_Validate_Success_10Cols_by_100Rows  |    130.99 us |     2.489 us |     2.556 us |    130.55 us |    126.56 us |     135.71 us |    25.3906 |    4.8828 |         - |    215.25 KB |
+| Content_Validate_Success_10Cols_by_1kRows   |    753.33 us |    11.869 us |     9.911 us |    755.53 us |    726.59 us |     765.81 us |   177.7344 |   35.1563 |         - |   1452.78 KB |
 ```
