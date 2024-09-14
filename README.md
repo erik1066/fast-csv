@@ -12,7 +12,11 @@ Additional content validation rules can be configured by supplying an *optional*
 
 RFC 4180 validation on a 40 column, 100,000 row CSV file takes 235 ms and allocates a total of 100 MB of memory on an old Intel laptop CPU from the 2010s. See [benchmark results](./Benchmarks.md) for more.
 
-You can run benchmarks using a special benchmarking project by navigating to `tests/RapidCsv.Benchmarks` and running `dotnet run -c Release`.
+You can run benchmarks using a special benchmarking project by navigating to `tests/RapidCsv.Benchmarks` and running:
+
+```bash
+dotnet run -c Release`
+```
 
 ## Basic Usage - Validate a CSV file against [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)
 
@@ -77,7 +81,7 @@ The [examples](/examples/) folder contains example code that demonstrates how to
 
 ### Example #1: RFC 4180 validation in a .NET Console App
 
-Let's look at the `RapidCsv.ConsoleDemo` project. 
+Let's look at the `RapidCsv.ConsoleDemo` project. This app shows how you how to validate a CSV file against just the RFC 4180 specification.
 
 1. Navigate to [examples/demo-console/](examples/demo-console/) in a terminal of your choice. 
 1. Enter the following into the terminal:
@@ -120,7 +124,7 @@ Jane,25,1/1/2010,555-555-5555,actv
 Hana,55,1/1/1970,555-555-555X,unkn
 ```
 
-Let's suppose we want to validate this CSV file on the following rules:
+And let's suppose we want to validate this CSV file on the following rules:
 
 1. `NAME` must be 0-25 characters
 1. `AGE` must be an integer
@@ -128,7 +132,7 @@ Let's suppose we want to validate this CSV file on the following rules:
 1. `PHONE` must be a valid 10-digit US phone number
 1. `STATUS` must be one of two values, `actv` or `inac`; all other values are invalid
 
-We can create an optional validation profile in JSON:
+We can create an optional validation profile in JSON that implements these rules:
 
 ```json
 {
@@ -202,7 +206,10 @@ Note the use of the `format` property in the `DOB` column definition, the `regex
 Using the profile is straightforward:
 
 ```csharp
+// Create the validator object
 CsvValidator validator = new CsvValidator();
+
+// Create the validation options
 var options = new ValidationOptions()
 {
     Separator = ',',
@@ -211,12 +218,14 @@ var options = new ValidationOptions()
 };
 
 Stream content = GenerateStreamFromString(csvContent);
+
+// Validate the file using the validator, and return the result to the caller
 ValidationResult result = validator.Validate(content: content, options: options);
 ```
 
 In other words, we read the raw JSON into memory and assign it to the `ValidationProfile` property of the `ValidationOptions` object. The validator will then use the profile to execute these content checks. 
 
-Since `ValidationProfile` is optional and can be empty, leaving it empty will conduct basic RFC 4180 checks only and apply no content validation rules.
+> Since `ValidationProfile` is optional and can be empty, leaving it empty will conduct basic RFC 4180 checks only and apply no content validation rules.
 
 The added overhead of these profile-driven content checks can be significant in terms of performance when running the validator at scale. Use caution in applying these rules and only apply them when real-time content validation is required for the use case.
 
@@ -245,7 +254,7 @@ Readable and understandable error messages are critical. Detected errors will gi
 
 ### Ease of use by developers
 
-The library is meant to be super easy to use by developers. It's one function call in one class:
+The library is meant to be simple and easy to use by developers. It's one function call in one class:
 
 ```cs
 CsvValidator validator = new CsvValidator();
