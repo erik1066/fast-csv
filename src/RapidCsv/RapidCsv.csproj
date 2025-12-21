@@ -3,7 +3,7 @@
   <Sdk Name="DotNet.ReproducibleBuilds.Isolated" Version="1.2.4" />
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Authors>Erik Knudsen</Authors>
     <NeutralLanguage>en-US</NeutralLanguage>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -14,8 +14,8 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <ImplicitUsings>enable</ImplicitUsings>
     <RepositoryType>git</RepositoryType>
-    <PackageVersion>0.0.1</PackageVersion>
-    <Version>0.0.1</Version>
+    <PackageVersion>0.0.2</PackageVersion>
+    <Version>0.0.2</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <RepositoryUrl>https://github.com/erik1066/rapid-csv</RepositoryUrl>
